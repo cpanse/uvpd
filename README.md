@@ -49,3 +49,5 @@ b.     Write summary of most relevant outcomes for lay public
 
 
 - [Evaluation of food-relevant chemicals in the ToxCast high-throughput screening program](https://doi.org/10.1016/j.fct.2016.04.012)
+
+- [http://dx.doi.org/10.18637/jss.v018.i05]

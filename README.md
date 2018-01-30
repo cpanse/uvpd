@@ -52,4 +52,4 @@ b.     Write summary of most relevant outcomes for lay public
 
 - [Chemical Informatics Functionality in R](http://dx.doi.org/10.18637/jss.v018.i05)
 
-- (https://CRAN.R-project.org/package=rcdk)
+- https://CRAN.R-project.org/package=rcdk

@@ -68,3 +68,9 @@ idx.corrupt contains corrupt smile codes?
 
 idx.correct <- which(sapply(fps, class) == "fingerprint")
 ```
+
+## Compute Distance Matrix
+
+```{r}
+fp.sim.tanimoto <- fingerprint::fp.sim.matrix(fps[idx.correct], method='tanimoto')
+```

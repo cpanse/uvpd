@@ -45,3 +45,7 @@ a.     Prepare scientific manuscript if data is interesting
 b.     Write summary of most relevant outcomes for lay public
 
  
+## References
+
+
+- [Evaluation of food-relevant chemicals in the ToxCast high-throughput screening program](https://doi.org/10.1016/j.fct.2016.04.012)

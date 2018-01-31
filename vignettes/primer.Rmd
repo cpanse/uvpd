@@ -71,6 +71,60 @@ idx.correct <- which(sapply(fps, class) == "fingerprint")
 
 ## Compute Distance Matrix
 
+
+conduct random experiment. select 1000 random items.
 ```{r}
+set.seed(1)
+
+n <-  length(fps[idx.correct])
+idx.smp <- sample(n, 1000)
+
+
+fp.sim.tanimoto <- fingerprint::fp.sim.matrix(fps[idx.correct][idx.smp],
+	method='tanimoto')
+
+fp.dist <- as.dist(fp.sim.tanimoto)
+
+image(log( fp.sim.tanimoto))
+```
+
+## clustering using kmeans
+
+
+```{r}
+
+km <- kmeans(fp.dist, 3)
+
+table(km$cluster)
+
+```
+
+## clustering using hclust
+
+```{r}
+hc <- hclust(fp.dist)
+plot(hc)
+```
+
+
+## PCR
+
+```{r}
+
+pr <- princomp(fp.sim.tanimoto)
+biplot(pr)
+
+```
+
+## MDS
+
+
+```{r}
+```
+
+
+```{r eval=FALSE}
 fp.sim.tanimoto <- fingerprint::fp.sim.matrix(fps[idx.correct], method='tanimoto')
+save(fp.sim.tanimoto, file='/scratch/fp.RData')
+
 ```

@@ -31,8 +31,8 @@ mols
 read in csv with CAS numbers and SMILES
 
 ```{r}
-
-NORMAN <- read.csv(system.file("extdata/NORMANSusdat_CAS.csv", package = "UVPD"),
+NORMAN <- read.csv(system.file("extdata/NORMANSusdat_CAS.csv", 
+                               package = "UVPD"),
                    sep=',', header=TRUE)
 ```
 
@@ -58,6 +58,8 @@ compute fingerprint;
 ```{r}
 fps <- lapply(mols, function(x){try(get.fingerprint(x, type='extended'))})
 table(sapply(fps, class))
+
+# fps.pubchem <- lapply(mols, function(x){try(get.fingerprint(x, type='pubchem'))})
 ```
 
 
@@ -73,17 +75,17 @@ idx.correct <- which(sapply(fps, class) == "fingerprint")
 
 
 conduct random experiment. select 1000 random items.
-```{r}
+```{r fig.height=8, fig.width=8}
 set.seed(1)
 
 n <-  length(fps[idx.correct])
-idx.smp <- sample(n, 1000)
+idx.smp <- sample(n, 100)
 
 
 fp.sim.tanimoto <- fingerprint::fp.sim.matrix(fps[idx.correct][idx.smp],
 	method='tanimoto')
 
-fp.dist <- as.dist(fp.sim.tanimoto)
+fp.dist <- as.dist(1 - fp.sim.tanimoto)
 
 image(log( fp.sim.tanimoto))
 ```
@@ -101,7 +103,7 @@ table(km$cluster)
 
 ## clustering using hclust
 
-```{r}
+```{r fig.retina=3, fig.height=12, fig.width=8}
 hc <- hclust(fp.dist)
 plot(hc)
 ```
@@ -109,9 +111,9 @@ plot(hc)
 
 ## PCR
 
-```{r}
+```{r fig.retina=3, fig.height=8, fig.width=8}
 
-pr <- princomp(fp.sim.tanimoto)
+pr <- princomp(fp.dist)
 biplot(pr)
 
 ```
@@ -119,7 +121,11 @@ biplot(pr)
 ## MDS
 
 
-```{r}
+```{r fig.retina=3, fig.height=8, fig.width=8}
+fit <- cmdscale(fp.dist, eig = TRUE, k = 2)
+plot(fit$points, main="Metric MDS", type="n")
+text(fit$points[,1],  fit$points[,2],
+     labels = NORMAN$casn[idx.correct][idx.smp], cex=.5) 
 ```
 
 

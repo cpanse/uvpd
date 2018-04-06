@@ -1,0 +1,130 @@
+---
+title: "SusDat_Updated_01032018"
+author: "AB/CP"
+date: "`r Sys.Date()`"
+output:
+  ioslides_presentation:
+    self_contained: yes
+    widescreen: yes
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Pre-Processing
+
+## Load
+```{r}
+NORMAN <- read.table(system.file("extdata/SusDat_Updated_01032018_ID_SMILES.txt",  package = "UVPD"), 
+                     sep="\t", header=TRUE)
+```
+
+
+## Data Cleaning
+
+
+## Some basic Statistics
+
+SMILES length
+```{r fig.retina=3, fig.width=8, fig.height=4}
+hist(nchar(as.character(NORMAN$SMILES)))
+```
+
+
+## Sampling
+```{r}
+set.seed(5)
+n.size <- 200
+smp <- sample(nrow(NORMAN), n.size)
+NORMAN.smp <- NORMAN[smp, ]
+```
+
+
+## List {.smaller}
+
+```{r}
+knitr::kable(head(NORMAN.smp))
+```
+
+## use rcdk 
+
+```{r}
+library(rcdk)
+mols <- parse.smiles(as.character(NORMAN.smp$SMILES))
+
+for (i in mols) {
+  try(do.aromaticity(i))
+  try(do.typing(i))
+  try(do.isotopes(i))
+}
+length(mols)
+```
+## compute fingerprint; 
+
+```{r}
+fps <- lapply(mols, function(x){try(get.fingerprint(x, type='extended'))})
+table(sapply(fps, class))
+
+# fps.pubchem <- lapply(mols, function(x){try(get.fingerprint(x, type='pubchem'))})
+```
+
+## Compute Distance Matrix
+
+```{r}
+fp.sim.tanimoto <- fingerprint::fp.sim.matrix(fps, method='tanimoto')
+
+fp.dist <- as.dist(1 - (fp.sim.tanimoto))
+```
+
+## Sanity checks
+
+```{r fig.retina=3, fig.width=8, fig.height=4}
+hist(fp.dist)
+```
+
+## Sanity checks 
+
+```{r fig.retina=3, fig.width=8, fig.height=4}
+image(as.matrix(fp.dist))
+```
+
+
+# Clustering
+
+
+## hclust
+
+```{r fig.retina=3, fig.width=8, fig.height=4}
+plot(hc <- hclust(fp.dist))
+```
+
+
+## kmeans
+
+```{r}
+kmc <- kmeans(fp.dist, 10, iter.max = 100)
+table(kmc$cluster)
+```
+
+
+
+## pca
+
+```{r fig.retina=3, fig.width=8, fig.height=6, echo=FALSE}
+op <- par(mfrow = c(1, 3))
+pcr <- prcomp(fp.dist)
+plot(pcr$x[,1], pcr$x[,2])
+text(pcr$x[,1], pcr$x[,2], NORMAN.smp$ID[as.numeric(names(pcr$x[,1]))],cex=0.3,pos=3)
+
+plot(pcr$x[,1], pcr$x[,3])
+text(pcr$x[,1], pcr$x[,3], NORMAN.smp$ID[as.numeric(names(pcr$x[,1]))],cex=0.3,pos=3)
+
+plot(pcr$x[,1], pcr$x[,4])
+text(pcr$x[,1], pcr$x[,4], NORMAN.smp$ID[as.numeric(names(pcr$x[,1]))],cex=0.3,pos=3)
+```
+
+

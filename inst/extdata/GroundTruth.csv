@@ -1,0 +1,182 @@
+ID	SMILES	clusterID
+C60-Ih5,6Fullerene;hydrofluoride	C12=C3C4=C5C6=C1C7=C8C9=C1C%10=C%11C(=C29)C3=C2C3=C4C4=C5C5=C9C6=C7C6=C7C8=C1C1=C8C%10=C%10C%11=C2C2=C3C3=C4C4=C5C5=C%11C%12=C(C6=C95)C7=C1C1=C%12C5=C%11C4=C3C3=C5C(=C81)Cp10=C23.F 	fullerene
+1,2,3-Benzotriazole	N1N=NC2=C1C=CC=C2	UV2
+11-nor-9-Carboxy-THC	CCCCCC1=CC(O)=C2[C@@H]3C=C(CC[C@H]3C(C)(C)OC2=C1)C(O)=O	DOA
+11-OH-delta-9-THC	CCCCCC1=CC(O)=C2[C@@H]3C=C(CO)CC[C@H]3C(C)(C)OC2=C1	DOA
+2-(Methylthio)benzothiazole	CSC1=NC2=CC=CC=C2S1	UV5
+2,4,5-Trichloroaniline	NC1=CC(Cl)=C(Cl)C=C1Cl	UV5
+2,4,6-Trichlorophenol	OC1=C(Cl)C=C(Cl)C=C1Cl	UV5
+2,4-Dichloroaniline	NC1=CC=C(Cl)C=C1Cl	UV4
+2,4-Dichlorophenol	OC1=C(Cl)C=C(Cl)C=C1	UV4
+2,4-Dichlorophenoxyacetic acid	OC(=O)COC1=C(Cl)C=C(Cl)C=C1	UV4
+2,4-Dinitrophenol	OC1=C(C=C(C=C1)[N+]([O-])=O)[N+]([O-])=O	UV4
+2,6,6-Trimethyl-2-cyclohexene-1,4-dione	CC1=CC(=O)CC(C)(C)C1=O	UV3
+2,6-Dichlorobenzamide	NC(=O)C1=C(Cl)C=CC=C1Cl	UV2
+2-Aminoacetophenone	CC(=O)C1=CC=CC=C1N	UV3
+2-Aminobenzothiazole	NC1=NC2=C(S1)C=CC=C2	UV2
+2-CB	COC1=CC(=C(C=C1CCN)OC)Br.Cl	DOA
+2-Methyl-4,6-dinitrophenol	CC1=C(O)C(=CC(=C1)[N+]([O-])=O)[N+]([O-])=O	UV4
+3,3'-Dichlorobenzidine	NC1=C(Cl)C=C(C=C1)C1=CC(Cl)=C(N)C=C1	UV4
+3,4-Dichlorophenylurea	NC(=O)NC1=CC=C(Cl)C(Cl)=C1	UV3
+4,4'-Sulfonyldiphenol	OC1=CC=C(C=C1)S(=O)(=O)C1=CC=C(O)C=C1	UV3
+4-Methyl-1,2,3-benzotriazole	CC1=C2NN=NC2=CC=C1	benzatriazole
+4-Methylbenzenesulfonic acid	CC1=CC=C(C=C1)S(O)(=O)=O	UV2
+5,6-Dimethyl-1H-benzotriazole	CC1=CC2=NNN=C2C=C1C	UV3
+5-Chlorobenzotriazole	ClC1=CC2=C(NN=N2)C=C1	UV3
+5-Methyl-1H-benzotriazole	CC1=CC2=C(NN=N2)C=C1	benzatriazole
+6-Monoacetylmorphine	CN1CC[C@]23[C@H]4OC5=C(O)C=CC(C[C@@H]1[C@@H]2C=C[C@@H]4OC(C)=O)=C35	DOA
+7-Aminoflunitrazepam	CN1C2=C(C=C(N)C=C2)C(=NCC1=O)C1=CC=CC=C1F	DOA
+9-COOH-delta-9-THC	CCCCCC1=CC2=C([C@@H]3C=C(C)CC[C@H]3C(C)(C)O2)C(O)=C1C(O)=O	DOA
+Acesulfame potassium	CC1=CC(=O)NS(=O)(=O)O1	UV2
+Amphetamine	CC(N)CC1=CC=CC=C1	DOA
+Arprinocid	NC1=NC=NC2=C1N=CN2CC1=C(Cl)C=CC=C1F	UV2
+Aspartame	COC(=O)C(CC1=CC=CC=C1)NC(=O)C(N)CC(O)=O	UV2
+Atrazine	CCNC1=NC(NC(C)C)=NC(Cl)=N1	UV4
+Azinphos-methyl	COP(=S)(OC)SCN1N=NC2=C(C=CC=C2)C1=O	UV4
+Barban	ClCC#CCOC(=O)NC1=CC=CC(Cl)=C1	UV5
+barbital	CCC1(CC)C(=O)NC(=O)NC1=O	barbiturate
+Bentazone	CC(C)N1C(=O)C2=C(NS1(=O)=O)C=CC=C2	UV4
+Benzocaine	CCOC(=O)C1=CC=C(N)C=C1	UV3
+Benzothiazole	S1C=NC2=CC=CC=C12	UV3
+Benzothiazolone	OC1=NC2=CC=CC=C2S1	UV3
+Benzoyl ecgonine	CN1[C@H]2CC[C@@H]1[C@H]([C@H](C2)OC(=O)C1=CC=CC=C1)C(O)=O	DOA
+Bezafibrate	CC(C)(OC1=CC=C(CCNC(=O)C2=CC=C(Cl)C=C2)C=C1)C(O)=O	UV4
+Bisphenol A	CC(C)(C1=CC=C(O)C=C1)C1=CC=C(O)C=C1	UV4
+Bromacil	CCC(C)N1C(=O)N=C(C)C(Br)C1=O	UV3
+butalbital	CC(C)CC1(CC=C)C(=O)NC(=O)NC1=O	barbiturate
+Caffeine	CN1C=NC2=C1C(=O)N(C)C(=O)N2C	UV2
+Carbamazepine	NC(=O)N1C2=CC=CC=C2C=CC2=C1C=CC=C2	UV3
+Carbamazepine 	N1(c2c(cccc2)C=Cc2c1cccc2)C(=O)N	carbamazepine
+Carbamazepine-10,11-epoxide 	NC(=O)N1c2ccccc2C2OC2c2ccccc12	carbamazepine
+Carbamazepine-9-carboxaldehyde   	NC(=O)N1c2ccccc2C(C=O)c2ccccc12	carbamazepine
+Carbendazim	COC(=O)NC1=NC2=CC=CC=C2N1	UV2
+Cetirizine	OC(=O)COCCN1CCN(CC1)C(C1=CC=CC=C1)C1=CC=C(Cl)C=C1	UV1
+Chloridazon	ClC1C(=N)C=NN(C1=O)C1=CC=CC=C1	UV3
+Chlorotoluron	CN(C)C(=O)NC1=CC(Cl)=C(C)C=C1	UV4
+Chloroxuron	CN(C)C(=O)NC1=CC=C(OC2=CC=C(Cl)C=C2)C=C1	UV4
+Chlorpyrifos	CCOP(=S)(OCC)OC1=NC(Cl)=C(Cl)C=C1Cl	UV5
+Clofibric acid 	CC(C)(Oc1ccc(Cl)cc1)C(=O)O	clofibric acid
+Cocaethylene	CCOC(=O)[C@@H]1[C@H]2CC[C@@H](C[C@@H]1OC(=O)C1=CC=CC=C1)N2C	DOA
+Cocaïne	COC(=O)[C@@H]1[C@H]2CC[C@@H](C[C@@H]1OC(=O)C1=CC=CC=C1)N2C	DOA
+Codeïne	COC1=C2O[C@H]3[C@@H](O)C=C[C@H]4[C@H]5CC(C=C1)=C2[C@@]34CCN5C	DOA
+Cyanazine	CCNC1=NC(NC(C)(C)C#N)=NC(Cl)=N1	UV3
+Cyclamic acid	OS(=O)(=O)NC1CCCCC1	polar
+Deethylatrazine	CC(C)NC1=NC(Cl)=NC(N)=N1	UV3
+Deisopropylatrazine	CCNC1=NC(N)=NC(Cl)=N1	UV2
+Delta-9-THC	[H][C@@]12C=C(C)CC[C@@]1([H])C(C)(C)OC1=CC(CCCCC)=CC(O)=C21	DOA
+Desalk-flurazepam	FC1=CC=CC=C1C1=NCC(=O)NC2=C1C=C(Cl)C=C2	DOA
+Diatrizoate sodium	CC(=O)NC1=C(I)C(C(O)=O)=C(I)C(NC(C)=O)=C1I	UV1
+Diazepam	CN1C2=C(C=C(Cl)C=C2)C(=NCC1=O)C1=CC=CC=C1	DOA
+Dibutyl phthalate	CCCCOC(=O)C1=CC=CC=C1C(=O)OCCCC	UV5
+Dicamba	COC1=C(Cl)C=CC(Cl)=C1C(O)=O	UV3
+Dicamba	COC1=C(Cl)C=CC(Cl)=C1C(O)=O	UV3
+Dichlobenil	ClC1=CC=CC(Cl)=C1C#N	UV4
+Dichlorprop	CC(OC1=C(Cl)C=C(Cl)C=C1)C(O)=O	UV4
+Diclofenac	OC(=O)CC1=C(NC2=C(Cl)C=CC=C2Cl)C=CC=C1	UV5
+Diclofenac 	OC(=O)c1ccccc1Nc1c(Cl)cccc1Cl	negative
+Dimethomorph	COC1=C(OC)C=C(C=C1)C(=CC(=O)N1CCOCC1)C1=CC=C(Cl)C=C1	UV4
+Dimethomorph	COC1=C(OC)C=C(C=C1)C(=CC(=O)N1CCOCC1)C1=CC=C(Cl)C=C1	UV4
+Dinoseb	CCC(C)C1=CC(=CC(=C1O)[N+]([O-])=O)[N+]([O-])=O	UV5
+Dinoterb	CC(C)(C)C1=CC(=CC(=C1O)[N+]([O-])=O)[N+]([O-])=O	UV5
+Diuron	CN(C)C(=O)NC1=CC(Cl)=C(Cl)C=C1	UV4
+EDDP	O[Cl](=O)(=O)=O.CC=C1N(C)C(C)CC1(C1=CC=CC=C1)C1=CC=CC=C1	DOA
+Ethofumesate	CCOC1OC2=C(C=C(OS(C)(=O)=O)C=C2)C1(C)C	UV5
+Fentanyl	CCC(=O)N(C1CCN(CCC2=CC=CC=C2)CC1)C1=CC=CC=C1	DOA
+Fenuron	CN(C)C(=O)NC1=CC=CC=C1	UV3
+Flunitrazepam	CN1C2=C(C=C(C=C2)[N+]([O-])=O)C(=NCC1=O)C1=CC=CC=C1F	DOA
+Fluoramphetamine	CC(CC1=CC=C(C=C1)F)N.Cl	DOA
+Fullerene C60	C12=C3C4=C5C6=C1C7=C8C9=C1C%10=C%11C(=C29)C3=C2C3=C4C4=C5C5=C9C6=C7C6=C7C8=C1C1=C8C%10=C%10C%11=C2C2=C3C3=C4C4=C5C5=C%11C%12=C(C6=C95)C7=C1C1=C%12C5=C%11C4=C3C3=C5C(=C81)C%10=C23	fullerene
+Fullerene C70	C12=C3C4=C5C6=C7C8=C9C%10=C%11C%12=C%13C%10=C%10C8=C5C1=C%10C1=C%13C5=C8C1=C2C1=C3C2=C3C%10=C%13C%14=C3C1=C8C1=C3C5=C%12C5=C8C%11=C%11C9=C7C7=C9C6=C4C2=C2C%10=C4C(=C29)C2=C6C(=C8C8=C9C6=C4C%13=C9C(=C%141)C3=C85)C%11=C27	fullerene
+Furosemide	NS(=O)(=O)C1=C(Cl)C=C(NCC2=CC=CO2)C(=C1)C(O)=O	UV3
+guanylurea		
+Heroïne	CN1CC[C@]23[C@H]4OC5=C(OC(C)=O)C=CC(C[C@@H]1[C@@H]2C=C[C@@H]4OC(C)=O)=C35	DOA
+HNCPPCRVHRTKBD-UHFFFAOYSA-N	CCCCOC(=O)CCCC1(C23C14C5=C6C7=C8C9=C1C%10=C%11C%12=C%13C%14=C%10C%10=C1C1=C%15C%16=C%17C%18=C%19C%20=C%21C%22=C%23C%24=C%25C%26=C(C7=C9C%11=C%26C%12=C%24C%22=C%13C%20=C%14C%18=C%10%16)C7=C%25C9=C(C4=C76)C4=C2C(=C%17C3=C%15C5=C81)C%19=C%21C4=C%239)C1=CC=CC=C1	fullerene
+Hydrochlorothiazide	NS(=O)(=O)C1=CC2=C(NCNS2(=O)=O)C=C1Cl	UV2
+Hydroxyl Fullerene	C12C3C4C5C6C3C7(C8(C1C9C1C3C%10C%11(C1C8(C1(C7(C7C6(C6C8C5(C5(C%12C4(C4(C2C9C2(C3(C3C9(C%10(C%10(C%13C%11C1C1C%13C%11(C(C6(C17)O)C1C8C5(C5C6C%12C4(C2C3(C6(C2C9C%10(C%11C1C52O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O)O	fullerene
+Ibuprofen	CC(C)CC1=CC=C(C=C1)C(C)C(O)=O	UV5
+Imidacloprid	[O-][N+](=O)\N=C1/NCCN1CC1=CN=C(Cl)C=C1	UV3
+Imidazole	c1c[nH]cn1	
+Iomeprol	CN(C(=O)CO)C1=C(I)C(C(=O)NCC(O)CO)=C(I)C(C(=O)NCC(O)CO)=C1I	UV1
+Iopromide	COCC(=O)NC1=C(I)C(C(=O)NCC(O)CO)=C(I)C(C(=O)N(C)CC(O)CO)=C1I	UV1
+Isoproturon	CC(C)C1=CC=C(NC(=O)N(C)C)C=C1	UV4
+Ketamine	Cl.CNC1(CCCCC1=O)C1=CC=CC=C1Cl	DOA
+Linuron	CON(C)C(=O)NC1=CC=C(Cl)C(Cl)=C1	UV4
+LSD	CCN(CC)C(=O)[C@H]1CN(C)[C@@H]2CC3=CNC4=CC=CC(=C34)C2=C1	DOA
+MCEWYIDBDVPMES-UHFFFAOYSA-N	COC(=O)CCCC1(C23C14C5=C6C7=C8C5=C9C1=C5C%10=C%11C%12=C%13C%10=C%10C1=C8C1=C%10C8=C%10C%14=C%15C%16=C%17C(=C%12C%12=C%17C%17=C%18C%16=C%16C%15=C%15C%10=C1C7=C%15C1=C%16C(=C%18C7=C2C2=C%10C(=C5C9=C42)C%11=C%12C%10=C%177)C3=C16)C%14=C%138)C1=CC=CC=C1	fullerene
+MCPA	CC1=C(OCC(O)=O)C=CC(Cl)=C1	UV4
+MDA	CC(CC1=CC2=C(C=C1)OCO2)N	DOA
+MDMA	CNC(C)CC1=CC2=C(OCO2)C=C1	DOA
+Mecoprop	CC(OC1=C(C)C=C(Cl)C=C1)C(O)=O	UV4
+Meprobamate	CCCC(C)(COC(N)=O)COC(N)=O	DOA
+MetaCPP, mCPP	ClC1=CC(=CC=C1)N1CCNCC1	DOA
+Metamphetamine	Cl.CN[C@@H](C)CC1=CC=CC=C1	DOA
+Metazachlor	CC1=CC=CC(C)=C1N(CN1C=CC=N1)C(=O)CCl	UV4
+Metformin 	CN(C)C(=N)NC(=N)N	
+Methadon	CCC(=O)C(CC(C)N(C)C)(C1=CC=CC=C1)C1=CC=CC=C1	DOA
+Methcathinone	CNC(C)C(=O)C1=CC=CC=C1	DOA
+Methyl parathion	COP(=S)(OC)OC1=CC=C(C=C1)[N+]([O-])=O	UV5
+Metobromuron	CON(C)C(=O)NC1=CC=C(Br)C=C1	UV4
+Metolachlor	CCc1cccc(c1N(C(C)COC)C(=O)CCl)C	metolachlor
+Metolachlor	CCC1=C(N(C(C)COC)C(=O)CCl)C(C)=CC=C1	UV5
+Metolachlor ESA 	O=S(=O)(O)CC(=O)N(C(C)COC)c1c(CC)cccc1C	metolachlor
+Metoprolol	COCCC1=CC=C(OCC(O)CNC(C)C)C=C1	UV2
+Metoxuron	COC1=C(Cl)C=C(NC(=O)N(C)C)C=C1	UV3
+Metribuzin	CSC1=NN=C(C(=O)N1N)C(C)(C)C	UV3
+Monolinuron	CON(C)C(=O)NC1=CC=C(Cl)C=C1	UV4
+Monuron	CN(C)C(=O)NC1=CC=C(Cl)C=C1	UV3
+Morphine	CN1CC[C@]23[C@H]4OC5=C(O)C=CC(C[C@@H]1[C@@H]2C=C[C@@H]4O)=C35	DOA
+N-(3,4-Dichlorophenyl)-N-methylurea	CNC(=O)NC1=CC(Cl)=C(Cl)C=C1	UV4
+Naphthalene	C1=CC2=CC=CC=C2C=C1	UV5
+Naphthalene-1-sulfonic acid	OS(=O)(=O)C1=CC=CC2=C1C=CC=C2	UV2
+Naproxen	COC1=CC2=CC=C(C=C2C=C1)C(C)C(O)=O	UV4
+N-Butylbenzenesulfonamide	CCCCNS(=O)(=O)C1=CC=CC=C1	UV4
+Neburon	CCCCN(C)C(=O)NC1=CC(Cl)=C(Cl)C=C1	UV5
+N-ethyl-MDA,MDEA	CCNC(C)CC1=CC=C2OCOC2=C1	DOA
+Nicosulfuron	COC1=CC(OC)=NC(NC(=O)NS(=O)(=O)C2=NC=CC=C2C(=O)N(C)C)=N1	UV3
+Norcocaïne	COC(=O)[C@@H]1[C@H]2CC[C@H](N2)C[C@@H]1OC(=O)C3=CC=CC=C3	DOA
+Norcodeine	COC1=C2O[C@H]3[C@@H](O)C=C[C@H]4[C@H]5CC(C=C1)=C2[C@@]34CCN5	DOA
+Nord(i)azepam, Desmethyldiazepam	ClC1=CC2=C(NC(=O)CN=C2C2=CC=CC=C2)C=C1	DOA
+Norfentanyl	CCC(=O)N(C1CCNCC1)C1=CC=CC=C1	DOA
+OLEYL ACETATE	CCCCCCCC/C=C\CCCCCCCCOC=O)C	oleyl
+OLEYL ARACHIDATE	CCCCCCCCCCCCCCCCCCCC(=O)OCCCCCCCC/C=C\CCCCCCCC	oleyl
+Oxazepam	OC1N=C(C2=CC=CC=C2)C2=CC(Cl)=CC=C2NC1=O	DOA
+Paroxetine	FC1=CC=C(C=C1)C1CCNCC1COC1=CC=C2OCOC2=C1	UV3
+PCP (phencyclidine)	C1CCC(CC1)(C2=CC=CC=C2)N3CCCCC3.Cl	DOA
+pentobarbital	CCCC(C)C1(CC)C(=O)NC(O)=NC1=O	barbiturate
+Pentoxifylline	CN1C=NC2=C1C(=O)N(CCCCC(C)=O)C(=O)N2C	UV2
+Phenazone	CN1N(C(=O)C=C1C)C1=CC=CC=C1	UV2
+phenobarbital	CCC1(C(=O)NC(=O)NC1=O)C1=CC=CC=C1	barbiturate
+Phoxim	CCOP(=S)(OCC)ON=C(C#N)C1=CC=CC=C1	UV5
+Pirimicarb	CN(C)C(=O)OC1=C(C)C(C)=NC(=N1)N(C)C	UV2
+Propazine	CC(C)NC1=NC(NC(C)C)=NC(Cl)=N1	UV4
+Pyrazole	N1C=CC=N1	UV1
+Ritalin	COC(=O)C(C1CCCCN1)C1=CC=CC=C1	DOA
+Ritalin zuur	OC(=O)C(C1CCCCN1)C1=CC=CC=C1	DOA
+Saccharin	O=C1NS(=O)(=O)C2=C1C=CC=C2	UV2
+Salicylic acid	OC(=O)C1=C(O)C=CC=C1	UV3
+secobarbital	CCCC(C)C1(CC=C)C(=O)NC(=O)NC1=O	barbiturate
+Simazine	CCNC1=NC(NCC)=NC(Cl)=N1	UV3
+Sotalol	CC(C)NCC(O)C1=CC=C(NS(C)(=O)=O)C=C1	UV1
+Styrene	C=CC1=CC=CC=C1	UV5
+Sulfamethazine	CC1=CC(C)=NC(NS(=O)(=O)C2=CC=C(N)C=C2)=N1	UV2
+Sulfamethoxazole	CC1=CC(NS(=O)(=O)C2=CC=C(N)C=C2)=NO1	UV3
+Temazepam	CN1C2=CC=C(Cl)C=C2C(=NC(O)C1=O)C1=CC=CC=C1	DOA
+Terbutryn	CCNC1=NC(SC)=NC(NC(C)(C)C)=N1	UV4
+Terbutylazine	CCNC1=NC(NC(C)(C)C)=NC(Cl)=N1	UV4
+Tetrachlorophthalic acid	OC(=O)C1=C(C(O)=O)C(Cl)=C(Cl)C(Cl)=C1Cl	UV3
+Tetrachlorophthalic acid	OC(=O)C1=C(C(O)=O)C(Cl)=C(Cl)C(Cl)=C1Cl	UV4
+Thiacloprid	ClC1=CC=C(CN2CCSC2=NC#N)C=N1	UV3
+thiopenthal	CCCC(C)C1(CC)C(=O)NC(S)=NC1=O	barbiturate
+TMDD 	OC(C#CC(O)(CC(C)C)C)(CC(C)C)C	
+Triazolam	CC1=NN=C2CN=C(C3=C(Cl)C=CC=C3)C3=C(C=CC(Cl)=C3)N12	DOA
+Trimethoprim	COC1=CC(CC2=CN=C(N)N=C2N)=CC(OC)=C1OC	UV4
+Triphenylphosphine oxide	O=P(C1=CC=CC=C1)(C1=CC=CC=C1)C1=CC=CC=C1	UV4
+Warfarin	CC(=O)CC(C1C(=O)Oc2ccccc2C1=O)c1ccccc1	UV4
+tetrabutylammonium	CCCC[N+](CCCC)(CCCC)CCCC	surfactants
+trimethyloctadecylammonium	CCCCCCCCCCCCCCCCCC[N+](C)(C)C	surfactants
+trimethyloctyl ammonium	CCCCCCCC[N+](C)(C)C	surfactants
+glucose	OCC1OC(O)C(O)C(O)C1O	polar
+l-(+)-lactic acid	CC(O)C(=O)O	polar
+phenylalanine	NC(Cc1ccccc1)C(=O)O	zwitter
+L-alanine	CC(N)C(=O)O	zwitter
+L-alanineREPLICATE	CC(N)C(=O)O	zwitter

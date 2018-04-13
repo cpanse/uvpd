@@ -1,4 +1,4 @@
-Package: UVPD
+Package: uvpd
 Type: Package
 Title: Ultraviolet Photodissociation
 Author: Christian Panse [cre, aut]

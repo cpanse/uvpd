@@ -1,0 +1,110 @@
+---
+title: "SusDat_Updated_01032018"
+author: "AB/CP"
+date: "`r Sys.Date()`"
+output: tint::tintHtml
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Pre-Processing
+
+## Load
+```{r}
+#load("~/susdat_200.RData")
+library(uvpd)
+data(susdat)
+``` 
+
+## Init
+
+```{r}
+ncluster <- 6
+```
+
+## Cleanup
+
+```{r}
+idx.corrupt.extended <- which(sapply(fps.extended, class) != "fingerprint")
+idx.correct.extended <- which(sapply(fps.extended, class) == "fingerprint")
+fps.extended <- fps.extended[idx.correct.extended]
+
+idx.corrupt.pubchem <- which(sapply(fps.pubchem, class) != "fingerprint")
+idx.correct.pubchem <- which(sapply(fps.pubchem, class) == "fingerprint")
+fps.pubchem <- fps.pubchem[idx.correct.pubchem]
+```
+
+
+## Compute distance matrix
+
+```{r eval=FALSE}
+fp.extended.tanimoto <- fingerprint::fp.sim.matrix(fps.extended, method='tanimoto')
+fp.pubchem.tanimoto <- fingerprint::fp.sim.matrix(fps.pubchem, method='tanimoto')
+
+
+fp.dist.extended <- as.dist(1 - (fp.extended.tanimoto))
+fp.dist.pubchem <- as.dist(1 - (fp.pubchem.tanimoto))
+```
+
+
+
+# SOM
+```{r}
+library(kohonen)
+```
+
+## Extract feature vectors
+
+```{r}
+fpmat.pubchem <- fingerprint::fp.to.matrix(fps.pubchem) 
+```
+
+## Initial Grid
+$f:{0, 1}^{881}  \rightarrow \mathbb{R}^2$
+
+```{r computeSOM, cache=TRUE}
+smp <- sample(nrow(fpmat.pubchem), 1000)
+G <-somgrid(6, 6, "hexagonal")
+
+
+S <- som(fpmat.pubchem[smp,], grid=G)
+```
+
+## plot SOM 
+```{r}
+# kmc.pubchem <- kmeans(fp.dist.pubchem, ncluster)
+load("~/__checkouts/R/uvpd/data/km6.RData")
+ncluster <- 6
+cm <- rainbow(ncluster, alpha=0.5)
+
+#plot(S, type = 'changes')
+```
+
+```{r fig.retina=3, fig.cap="SOM", fig.width=7, fig.height=4, cache=TRUE}
+
+rv <- lapply(5 ,function(n){
+  G <-somgrid(n, n, "hexagonal")
+  set.seed(1)
+  S <- som(fingerprint::fp.to.matrix(fps.pubchem[]), grid=G)
+  op <- par(mfrow=c(2, 2))
+  plot(S, type = 'changes')
+  plot(S, type = 'count')
+  plot(S, type = 'dist.neighbours')
+  plot(S, type="mapping",
+       col = cm[km.pubchem$cluster[smp]], 
+       #bgcol = cm[kmc.pubchem$cluster],
+       cex=2,
+       pch=16)
+  add.cluster.boundaries(S, km.pubchem$cluster[smp])
+})
+```
+
+
+# References
+
+- ftp://ftp.ncbi.nlm.nih.gov/pubchem/specifications/pubchem_fingerprints.txt

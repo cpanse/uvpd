@@ -66,6 +66,5 @@ area of cheminformatic/ (in-silico) mass spectrometry.
 - ftp://ftp.ncbi.nlm.nih.gov/pubchem/specifications/pubchem_fingerprints.txt
 
 
-- 
-A new metaphor for projection-based visual analysis and data exploration Proc. SPIE
+- A new metaphor for projection-based visual analysis and data exploration Proc. SPIE
 2007 | conference-paper DOI: 10.1117/12.697879

@@ -1,0 +1,331 @@
+---
+title: "SusDat_Updated_01032018"
+author: "AB/CP"
+date: "`r Sys.Date()`"
+output: tint::tintHtml
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Pre-Processing
+
+## Load
+```{r}
+NORMAN <-read.csv('inst/extdata/SusDat_SMILES_Selected.txt', sep='\t', header = TRUE)
+``` 
+
+
+
+## Data Cleaning
+
+
+`NA`
+
+## Some basic Statistics
+
+SMILES length
+```{r fig.retina=3, fig.width=8, fig.height=4}
+hist(nchar(as.character(NORMAN$SMILES)))
+```
+
+
+## Sampling
+```{r}
+set.seed(5)
+n.size <- 2000
+ncluster <- 6
+smp <- sample(nrow(NORMAN), n.size)
+NORMAN.smp <- NORMAN[smp, ]
+NORMAN.smp$clusterID <- NA
+```
+
+## Add Ground Truth {.smaller}
+
+```{r echo=FALSE, eval=FALSE}
+GT2 <- data.frame(
+  ID = c("Metolachlor", "Metolachlor ESA", "Clofibric acid", "Carbamazepine", "Carbamazepine-10,11-epoxide", "Carbamazepine-9-carboxaldehyde", "OLEYL ARACHIDATE", "OLEYL ACETATE"),
+  SMILES = c("CCc1cccc(c1N(C(C)COC)C(=O)CCl)C", "O=S(=O)(O)CC(=O)N(C(C)COC)c1c(CC)cccc1C", "CC(C)(Oc1ccc(Cl)cc1)C(=O)O", "N1(c2c(cccc2)C=Cc2c1cccc2)C(=O)N", "NC(=O)N1c2ccccc2C2OC2c2ccccc12", "NC(=O)N1c2ccccc2C(C=O)c2ccccc12", "CCCCCCCCCCCCCCCCCCCC(=O)OCCCCCCCC/C=C\\CCCCCCCC", "CCCCCCCC/C=C\\CCCCCCCCOC(=O)C"))
+```
+
+```{r load_ground_truth}
+GT <- read.table(
+  system.file("extdata/GroundTruth.csv",  package = "UVPD"), 
+                     sep="\t", header=TRUE, fill=TRUE)
+table(GT$clusterID)
+```
+
+```{r}
+NORMAN.smp <- rbind(NORMAN.smp, GT)
+```
+
+## List {.smaller}
+
+```{r}
+knitr::kable(tail(NORMAN.smp))
+```
+
+## use rcdk 
+
+```{r}
+library(rcdk)
+mols <- parse.smiles(as.character(NORMAN.smp$SMILES))
+
+for (i in mols) {
+  try(do.aromaticity(i))
+  try(do.typing(i))
+  try(do.isotopes(i))
+}
+
+show(mols[length(mols)])
+show(mols[length(mols)-1])
+```
+
+
+
+
+## compute fingerprint; 
+
+```{r}
+fps.extended <- lapply(mols, function(x){try(get.fingerprint(x, type='extended'))})
+table(sapply(fps.extended, class))
+
+fps.pubchem <- lapply(mols, function(x){try(get.fingerprint(x, type='pubchem'))})
+
+
+table(sapply(fps.pubchem, class))
+```
+
+## idx.corrupt contains corrupt smile codes?
+
+
+```{r}
+idx.corrupt.extended <- which(sapply(fps.extended, class) != "fingerprint")
+idx.correct.extended <- which(sapply(fps.extended, class) == "fingerprint")
+fps.extended <- fps.extended[idx.correct.extended]
+tail(idx.correct.extended,2)
+```
+
+
+```{r}
+idx.corrupt.pubchem <- which(sapply(fps.pubchem, class) != "fingerprint")
+idx.correct.pubchem <- which(sapply(fps.pubchem, class) == "fingerprint")
+fps.pubchem <- fps.pubchem[idx.correct.pubchem]
+
+stopifnot(identical(idx.correct.extended, idx.correct.pubchem))
+NORMAN.smp <- NORMAN.smp[idx.correct.extended,]
+NORMAN.smp$SMILES[c(nrow(NORMAN.smp)-1, nrow(NORMAN.smp))]
+```
+
+
+
+
+## Compute Distance Matrix
+
+```{r}
+#fpmat.pubchem <- fp.to.matrix(fps.pubchem)   
+fp.extended.tanimoto <- fingerprint::fp.sim.matrix(fps.extended, method='tanimoto')
+fp.pubchem.tanimoto <- fingerprint::fp.sim.matrix(fps.pubchem, method='tanimoto')
+
+dim(fp.extended.tanimoto);
+fp.dist.extended <- as.dist(1 - (fp.extended.tanimoto))
+fp.dist.pubchem <- as.dist(1 - (fp.pubchem.tanimoto))
+save(NORMAN.smp, fp.dist.extended, fp.dist.pubchem, file="/tmp/UVPD_fp_dist.RData")
+```
+
+## Sanity checks
+
+```{r}
+```
+
+## Some distance statistics
+```{r fig.retina=3, fig.width=8, fig.height=4}
+op <- par(mfrow=c(1, 2))
+hist(fp.dist.extended)
+hist(fp.dist.pubchem)
+```
+
+## Sanity checks 
+
+```{r fig.retina=3, fig.width=8, fig.height=4}
+op <- par(mfrow=c(1, 2))
+image(as.matrix(fp.dist.extended))
+image(as.matrix(fp.dist.pubchem))
+```
+
+
+# Clustering
+
+```{r}
+(ncluster)
+```
+
+## hclust
+
+```{r fig.retina=3, fig.width=8, fig.height=4}
+hc.extended <- hclust(fp.dist.extended)#, hang = -0.01, cex = 0.7)
+hc.pubchem <- hclust(fp.dist.pubchem) #, hang = -0.01, cex = 0.7)
+```
+
+
+## kmeans
+
+```{r}
+set.seed(1) ## kmeans uses a random start
+kmc.extended <- kmeans(fp.dist.extended, center = ncluster, iter.max = 100)
+table(kmc.extended$cluster)
+```
+```{r}
+set.seed(1) ## kmeans uses a random start
+kmc.pubchem <- kmeans(fp.dist.pubchem, center = ncluster, iter.max = 100)
+table(kmc.pubchem$cluster)
+```
+
+
+## Determine number of clusters
+
+
+```{r Determine_N fig.retina=3}
+
+
+tot.withinss <- sapply(1:14, function(n){
+ km <- kmeans(fp.dist.pubchem, center = n)
+ km$tot.withinss	
+})
+```
+
+## write results
+
+```{r}
+NORMAN.smp$kmc.extended <- kmc.extended$cluster
+NORMAN.smp$kmc.pubchem <- kmc.pubchem$cluster
+NORMAN.smp$hc.extended  <- cutree(hc.extended, k = ncluster)
+NORMAN.smp$hc.pubchem  <- cutree(hc.pubchem, k = ncluster)
+```
+
+```{r}
+knitr::kable(head(NORMAN.smp, 20))
+```
+
+# Visualization 
+
+
+## using PCA {.smaller}
+
+Please note: the PCR is only used for a projection into the 2D.
+Here we have the scores:
+```{r fig.retina=3, fig.width=8, fig.height=6, echo=FALSE}
+op <- par(mfrow = c(1, 2))
+pcr.extended <- prcomp(fp.dist.extended)
+pcr.pubchem <- prcomp(fp.dist.pubchem)
+plot(pcr.extended)
+plot(pcr.pubchem)
+```
+
+
+## plot pc2 versus pc1 {.smaller}
+
+```{r fig.retina=3, fig.width=10, fig.height=10, echo=FALSE, eval = TRUE}
+rb <- rainbow(11, alpha = 0.5)
+op <- par(mfrow = c(2, 2))
+
+rv <- lapply(c('hc.extended', 'kmc.extended'), 
+             function(clusterMethod){
+               plot(pcr.extended$x[,1], pcr.extended$x[,2],
+                    pch = 16,
+                    main = clusterMethod,
+                    cex = 0.5,
+                    col = rb[NORMAN.smp[,clusterMethod]])
+               
+               text(pcr.extended$x[,1], pcr.extended$x[,2], 
+                    NORMAN.smp$ID[as.numeric(names(pcr.extended$x[, 1]))], 
+                    cex = 0.3,
+                    pos = 3, 
+                    col = rb[NORMAN.smp[, clusterMethod]])
+               
+               text(pcr.extended$x[,1], pcr.extended$x[,2], 
+                    NORMAN.smp$clusterID[as.numeric(names(pcr.extended$x[, 1]))], 
+                    cex = 0.4,
+                    pos = 1, 
+                    col = 'black')
+               
+             })
+
+rv <- lapply(c( 'hc.pubchem',  'kmc.pubchem'), 
+             function(clusterMethod){
+               plot(pcr.pubchem$x[,1], pcr.pubchem$x[,2],
+                    pch = 16,
+                    main = clusterMethod,
+                    cex = 0.5,
+                    col = rb[NORMAN.smp[,clusterMethod]])
+               
+               text(pcr.pubchem$x[,1], pcr.pubchem$x[,2], 
+                    NORMAN.smp$ID[as.numeric(names(pcr.pubchem$x[, 1]))], 
+                    cex = 0.3,
+                    pos = 3, 
+                    col = rb[NORMAN.smp[, clusterMethod]])
+               
+               text(pcr.pubchem$x[,1], pcr.pubchem$x[,2], 
+                    NORMAN.smp$clusterID[as.numeric(names(pcr.pubchem$x[, 1]))], 
+                    cex = 0.4,
+                    pos = 1, 
+                    col = 'black')
+               
+             })
+
+     
+###
+```
+
+
+## Evaluation of the clustering
+
+### Frequency
+```{r}
+lapply(c('hc.extended', 'hc.pubchem', 'kmc.extended', 'kmc.pubchem'), function(clusterMethod){table(NORMAN.smp[,clusterMethod])})
+```
+
+### Summary
+
+```{r}
+summary(hc.pubchem)
+summary(hc.extended)
+summary(kmc.pubchem)
+summary(kmc.extended)
+```
+
+
+
+# SOM
+
+
+## 
+
+```{r}
+fpmat_pubchem <- fp.to.matrix(fps.pubchem) 
+```
+
+```{r}
+cm <- rainbow(ncluster, alpha=0.5)
+G <-somgrid(14, 14, "hexagonal")
+S <- som(fingerprint::fp.to.matrix(fps.pubchem), grid=G)
+
+
+plot(S, type = 'changes')
+plot(S, type="mapping", col = cm[kmc.pubchem$cluster], pch=16)
+add.cluster.boundaries(S, kmc.pubchem$cluster)
+
+```
+
+```{r}
+library(kohonen)
+cm<-rainbow(4)
+S <- som(scale(iris[,c(1,2,3,4)]), grid=somgrid(topo = "hexagonal"));
+C <- as.integer(iris[,5])
+plot.kohonen(S, type="mapping", col = cm[C]); 
+add.cluster.boundaries(S, C)
+```

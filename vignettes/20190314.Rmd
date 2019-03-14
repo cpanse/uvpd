@@ -3,8 +3,68 @@
 
 - site note: Metabolmics 
 
-- MetFragR R package https://github.com/ipb-halle/MetFragR
 
+TODO:
+
+- MetFragR R package https://github.com/ipb-halle/MetFragR
+  * compute in-silico fragments (CP)
+  
+https://github.com/ipb-halle/MetFragR/blob/9e482f6f6cb3cb6aa07af779d9acc7d6ff757f5f/metfRag/R/fragment.R#L11
+  
+  
 - Input: 
- - 
  
+ 
+```{r}
+
+library(rawDiag)
+rawfile <- "/Users/cp/data/stds_pos_neg_MS_highconc_UVPD_50_300.raw"
+
+RAW <- read.raw(rawfile, rawDiag = TRUE)
+```
+
+
+```{r}
+ table(RAW$MSOrder)
+```
+
+
+## Input
+
+
+### Get XIC
+
+```{r}
+mz <- 296.116
+	
+XIC <- readXICs(rawfile, mz)
+
+plot(XIC)
+```
+
+
+### Get Ms2 Scannumbers
+
+```{r}
+eps<- 0.01; 
+sn<-RAW$scanNumber[which(mz-eps < RAW$PrecursorMass & RAW$PrecursorMass < mz+eps)]
+```
+
+### Get Ms2 Scans
+
+
+```{r}
+plot.MS2Scans <- function (x, y, ...) 
+{
+    plot(x$mZ, x$intensity, type = "h", main = x$title, xlab = "m/Z", 
+        ylab = "intensity", 
+        sub=x$scanType,
+        ...)
+}
+
+
+
+queryScannumbers <- sn[RAW$StartTime[sn] * 60 > 951 & RAW$StartTime[sn] * 60  < 961]
+MS2Scans <- readScans(rawfile = rawfile, queryScannumbers)
+lapply(MS2Scans, plot.MS2Scans)
+```

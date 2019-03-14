@@ -1,1 +1,10 @@
 
+# 2019-03-14 session @ fgcz, AB/CP
+
+- site note: Metabolmics 
+
+- MetFragR R package https://github.com/ipb-halle/MetFragR
+
+- Input: 
+ - 
+ 

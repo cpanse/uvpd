@@ -10,8 +10,12 @@ TODO:
   * compute in-silico fragments (CP)
   
 https://github.com/ipb-halle/MetFragR/blob/9e482f6f6cb3cb6aa07af779d9acc7d6ff757f5f/metfRag/R/fragment.R#L11
-  
-  
+
+```{r}
+library(MetFragR)
+
+```
+
 - Input: 
  
  

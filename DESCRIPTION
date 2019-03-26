@@ -4,11 +4,10 @@ Title: Ultraviolet Photodissociation
 Author: Christian Panse [cre, aut]
 Maintainer: Christian Panse<cp@fgcz.ethz.ch>
 Version: 0.0.1
-Description: provides access modules and functions to interact with the FGCZ's 
-    bfabric system. The package contains shiny applications, e.g., to allow the FGCZ user 
-    to automatically generate a certain set of queues for thermo instruments. 
+Description: provides ... 
 Depends:
-    rcdk
+    rawDiag (>= 0.0.20),
+    rcdk (>= 3.4.7.1)
 Suggest: rmarkdown,
     roxygen2,
     testthat,
@@ -18,4 +17,4 @@ Collate:
     uvpd.R
     zzz.R
 URL: https://github.com/cpanse/UVPD
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0

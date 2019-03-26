@@ -1,5 +1,18 @@
+---
+title: "Computer in-silico fragment and match"
+author: "AB/CP"
+output:
+  html_document:
+    toc_float: true
+    toc: true
+    number_sections: true
+    theme: united
+bibliography: uvpd.bib
+---
 
-# 2019-03-14 session @ fgcz, AB/CP
+# 2019-03-14 
+
+session @ fgcz, AB/CP
 
 - site note: Metabolmics 
 
@@ -11,8 +24,17 @@ TODO:
   
 https://github.com/ipb-halle/MetFragR/blob/9e482f6f6cb3cb6aa07af779d9acc7d6ff757f5f/metfRag/R/fragment.R#L11
 
+
 ```{r}
-library(MetFragR)
+library(metfRag)
+
+smiles <- "CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1"
+molecule<-parse.smiles(smiles)[[1]]
+
+#calculate the fragments
+fragments <- frag.generateFragments(molecule, 1)
+
+length(fragments)
 
 ```
 
@@ -20,10 +42,11 @@ library(MetFragR)
  
  
 ```{r}
-
+library(uvpd)
 library(rawDiag)
-rawfile <- "/Users/cp/data/stds_pos_neg_MS_highconc_UVPD_50_300.raw"
-
+#rawfile <- "/Users/cp/data/stds_pos_neg_MS_highconc_UVPD_50_300.raw"
+(rawfile <- file.path(Sys.getenv('HOME'), "Downloads",
+  "stds_pos_neg_MS_highconc_UVPD_50_300.raw"))
 RAW <- read.raw(rawfile, rawDiag = TRUE)
 ```
 
@@ -50,8 +73,8 @@ plot(XIC)
 ### Get Ms2 Scannumbers
 
 ```{r}
-eps<- 0.01; 
-sn<-RAW$scanNumber[which(mz-eps < RAW$PrecursorMass & RAW$PrecursorMass < mz+eps)]
+eps <- 0.01; 
+sn <-RAW$scanNumber[which(mz-eps < RAW$PrecursorMass & RAW$PrecursorMass < mz+eps)]
 ```
 
 ### Get Ms2 Scans
@@ -70,5 +93,56 @@ plot.MS2Scans <- function (x, y, ...)
 
 queryScannumbers <- sn[RAW$StartTime[sn] * 60 > 951 & RAW$StartTime[sn] * 60  < 961]
 MS2Scans <- readScans(rawfile = rawfile, queryScannumbers)
-lapply(MS2Scans, plot.MS2Scans)
+#lapply(MS2Scans, plot.MS2Scans)
+```
+
+# 2019-03-26 
+1415-1600 via Skype, FGCZ
+
+
+## Implement getFragments method
+
+```{r}
+df.frags <- getFragments("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", treeDepth = 1) 
+idx<-order(df.frags$MH1P)
+df.frags <- df.frags[idx, ]
+```
+
+### Plot in-silico spec
+```{r in-silico, fig.retina=3}
+plot(table(df.frags$MH1P))
+```
+
+
+## Compute and Plot Matches
+
+```{r matchPlot}
+table.df.frags <- table(df.frags$MH1P)
+library(protViz)
+library(knitr)
+
+par(mar=c(6,6,6,2))
+rv <- lapply(MS2Scans, function(x){
+   plot(x$mZ, x$intensity,
+        type = "h",
+        main = x$title,
+        xlab = "m/Z", 
+        log='y',
+        # ylim=c(-max(x$intensity), max(x$intensity)),
+        ylab = "intensity", 
+        sub = x$scanType)
+  
+  # compute match
+  idx.NN <- findNN(x$mZ, df.frags$MH1P)
+  error <- abs(x$mZ - df.frags$MH1P[idx.NN])
+  hits <- (error < 0.0005)
+  mZ.hits <- unique(df.frags$MH1P[idx.NN[hits]])
+  abline(v = mZ.hits, col=rgb(0.8,0.3,0.3, alpha = 0.4))
+  axis(3, mZ.hits, round(mZ.hits,2))
+  
+  hit.df <- df.frags[idx.NN[hits],]
+  
+   print(kable(hit.df))
+   hit.df
+})
 ```

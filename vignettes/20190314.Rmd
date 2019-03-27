@@ -103,9 +103,12 @@ MS2Scans <- readScans(rawfile = rawfile, queryScannumbers)
 ## Implement getFragments method
 
 ```{r}
+getFragments
+```
+
+example call
+```{r}
 df.frags <- getFragments("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", treeDepth = 1) 
-idx<-order(df.frags$MH1P)
-df.frags <- df.frags[idx, ]
 ```
 
 ### Plot in-silico spec
@@ -121,6 +124,8 @@ table.df.frags <- table(df.frags$MH1P)
 library(protViz)
 library(knitr)
 
+write.csv(file='peaklist1.csv', data.frame(mZ=MS2Scans[[1]]$mZ,intensity=MS2Scans[[1]]$intensity), row.names = FALSE)
+
 par(mar=c(6,6,6,2))
 rv <- lapply(MS2Scans, function(x){
    plot(x$mZ, x$intensity,
@@ -135,7 +140,7 @@ rv <- lapply(MS2Scans, function(x){
   # compute match
   idx.NN <- findNN(x$mZ, df.frags$MH1P)
   error <- abs(x$mZ - df.frags$MH1P[idx.NN])
-  hits <- (error < 0.0005)
+  hits <- (error < 0.005)
   mZ.hits <- unique(df.frags$MH1P[idx.NN[hits]])
   abline(v = mZ.hits, col=rgb(0.8,0.3,0.3, alpha = 0.4))
   axis(3, mZ.hits, round(mZ.hits,2))

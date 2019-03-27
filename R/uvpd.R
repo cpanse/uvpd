@@ -5,7 +5,7 @@
 #'
 #' @param smiles 
 #'
-#' @return \code{data.frame} containing the SMILES and fragments
+#' @return a \code{data.frame} containing the SMILES and MH1P charged fragments.
 #' @author AB,CP 2019
 #' @export getFragments
 #' @import rcdk
@@ -31,7 +31,17 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   
   df <- data.frame(MH1P=sapply(fragments, rcdk::get.exact.mass) + 1.0072,
                    SMILES=as.character(sapply(fragments, rcdk::get.smiles)))
-  df
+  
+  # TODO(cp)
+  # formal=as.character(sapply(fragments,rcdk::get.formal.charge)))
+  
+  # write.csv(file='peaklist1.csv',
+  #  data.frame(mZ=MS2Scans[[1]]$mZ,
+  #     intensity=MS2Scans[[1]]$intensity),
+  # row.names = FALSE)
+  
+  idx <- order(df$MH1P)
+  df[idx, ]
 }
 
 matchFragment <- function(x, y, ...){

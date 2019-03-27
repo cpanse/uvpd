@@ -28,13 +28,22 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
     try(do.isotopes(i))
   }
   
+ 
+  # TODO(ab): do we have to remove e-?
+  df <- data.frame(M1P=sapply(fragments, rcdk::get.exact.mass) ,
+                   SMILES=as.character(sapply(fragments, rcdk::get.smiles)),
+                   formula=as.character(sapply(fragments, function(x){rcdk::get.mol2formula(x)@string}))
+                  )
+ 
+  # consider only mols having a weight of more than 50Da.
+  df <- df[df$M1P > 50, ]
+ 
+  df$MH1P  <- df$M1P  + 1.00727646677
+  df$M2H1P <- df$MH1P + 1.00782504
   
-  df <- data.frame(MH1P=sapply(fragments, rcdk::get.exact.mass) + 1.0072,
-                   SMILES=as.character(sapply(fragments, rcdk::get.smiles)))
   
-  # TODO(cp)
-  # formal=as.character(sapply(fragments,rcdk::get.formal.charge)))
-  
+  df$M1P[!grepl("[NSOPI]|Cl|Br", df$formula)] <- NA
+
   # write.csv(file='peaklist1.csv',
   #  data.frame(mZ=MS2Scans[[1]]$mZ,
   #     intensity=MS2Scans[[1]]$intensity),

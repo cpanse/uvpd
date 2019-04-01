@@ -108,23 +108,29 @@ getFragments
 
 example call
 ```{r}
-df.frags <- getFragments("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", treeDepth = 1) 
+df.frags <- getFragments("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", treeDepth = 2) 
 ```
 
 ### Plot in-silico spec
 ```{r in-silico, fig.retina=3}
-plot(table(df.frags$MH1P))
+plot(table(df.frags$mZ))
 ```
 
 
 ## Compute and Plot Matches
 
-```{r matchPlot}
-table.df.frags <- table(df.frags$MH1P)
+```{r matchPlot, fig.retina=3}
+# table.df.frags <- table(df.frags$mZ)
+
 library(protViz)
 library(knitr)
 
-write.csv(file='peaklist1.csv', data.frame(mZ=MS2Scans[[1]]$mZ,intensity=MS2Scans[[1]]$intensity), row.names = FALSE)
+write.csv(file='peaklist1.csv', data.frame(mZ=MS2Scans[[1]]$mZ, intensity=MS2Scans[[1]]$intensity), row.names = FALSE)
+
+MS2Scans <- lapply(MS2Scans, function(x){rv <- x; idx <- x$intensity >0; x$mZ<-x$mZ[idx]; x$intensity <- x$intensity[idx]; x})
+
+
+df.frags <- df.frags[!is.na(df.frags$mZ), ]
 
 par(mar=c(6,6,6,2))
 rv <- lapply(MS2Scans, function(x){
@@ -133,19 +139,29 @@ rv <- lapply(MS2Scans, function(x){
         main = x$title,
         xlab = "m/Z", 
         log='y',
+        col='grey',
         # ylim=c(-max(x$intensity), max(x$intensity)),
         ylab = "intensity", 
         sub = x$scanType)
   
   # compute match
-  idx.NN <- findNN(x$mZ, df.frags$MH1P)
-  error <- abs(x$mZ - df.frags$MH1P[idx.NN])
-  hits <- (error < 0.005)
-  mZ.hits <- unique(df.frags$MH1P[idx.NN[hits]])
-  abline(v = mZ.hits, col=rgb(0.8,0.3,0.3, alpha = 0.4))
-  axis(3, mZ.hits, round(mZ.hits,2))
+  idx.NN <- findNN(x$mZ, df.frags$mZ)
   
-  hit.df <- df.frags[idx.NN[hits],]
+  error <- abs(x$mZ - df.frags$mZ[idx.NN])
+  hits <- (error < 0.001)
+  mZ.hits <- unique(df.frags$mZ[idx.NN[hits]])
+  abline(v = mZ.hits, col=rgb(0.8,0.3,0.3, alpha = 0.4))
+  
+  
+  axis(3, mZ.hits, round(mZ.hits,2))
+  hit.idx <- idx.NN[hits]
+  
+  text(df.frags$mZ[hit.idx],
+       rep(max(x$intensity)/2, length(hit.idx)),
+       paste(df.frags$formula[hit.idx], df.frags$type[hit.idx], round(df.frags$mZ[hit.idx],2)),
+       srt=90, pos=rep(c(2,1), length(hit.idx)/2), cex=0.4)
+  
+  hit.df <- df.frags[idx.NN[hits], ]
   
    print(kable(hit.df))
    hit.df

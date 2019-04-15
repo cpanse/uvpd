@@ -10,7 +10,8 @@ Depends:
     protViz (>= 0.4.0),
     rawDiag (>= 0.0.20),
     rcdk (>= 3.4.7.1)
-Suggest: rmarkdown,
+Suggest: knitr, 
+    rmarkdown,
     roxygen2,
     testthat,
 License: GPL
@@ -19,4 +20,4 @@ Collate:
     uvpd.R
     zzz.R
 URL: https://github.com/cpanse/UVPD
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1

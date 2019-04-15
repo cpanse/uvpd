@@ -66,7 +66,74 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   df[idx, ]
 }
 
-matchFragment <- function(x, y, ...){
+
+.matchFragment <- function(x, fragments, errorCutOff=0.001, plot=FALSE){
+  # compute match
+  idx.NN <- findNN(x$mZ, fragments$mZ)
   
+  error <- abs(x$mZ - fragments$mZ[idx.NN])
+  
+  hits <- (error < errorCutOff)
+  
+  
+  mZ.hits <-fragments$mZ[idx.NN[hits]]
+  intensity.hits <- x$intensity[hits]
+  
+  hit.idx <- idx.NN[hits]
+  
+  hit.df <- df.frags[idx.NN[hits], ]
+  hit.df$intensity <- intensity.hits
+  
+  
+  if(plot){
+    plot(x$mZ, x$intensity,
+         type = "h",
+         main = x$title,
+         xlab = "m/Z", 
+         log='y',
+         col='grey',
+         # ylim=c(-max(x$intensity), max(x$intensity)),
+         ylab = "intensity", 
+         sub = x$scanType)
+    
+    
+    abline(v = mZ.hits, col=rgb(0.8,0.3,0.3, alpha = 0.4))
+    axis(3, mZ.hits, round(mZ.hits,2))
+    
+    
+    
+    text(df.frags$mZ[hit.idx],
+         rep(max(x$intensity)/2, length(hit.idx)),
+         paste(df.frags$formula[hit.idx], df.frags$type[hit.idx], round(df.frags$mZ[hit.idx],2)),
+         srt=90, pos=rep(c(2,1), length(hit.idx)/2), cex=0.4)
+    
+  }
+  hit.df
+}
+
+#' Compute match between in-silico fragments and MS2 scans
+#'
+#' @param MS2Scans list of MS2 scans.
+#' @param fragments \code{data.frame} of in-silico fragments.
+#' @param plot \code{TRUE} or \code{FALSE}
+#' @param errorCutOff mZ error cut-off.
+#' @param FUN function used by aggregate.
+#' @param ... 
+#'
+#' @return a aggregate data frame
+#' @export
+#'
+#' @examples
+matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, FUN=sum, ...){
+  
+  rv <- lapply(MS2Scans, FUN = .matchFragment, fragments = fragments, errorCutOff = errorCutOff)
+  
+  S <- aggregate(intensity ~ mZ + type + SMILES + formula, 
+                 data=do.call('rbind', rv),
+                 FUN=FUN)
+  
+  S <- S[order(S$mZ),]
+  rownames(S) <- 1:nrow(S)
+  S
 }
   

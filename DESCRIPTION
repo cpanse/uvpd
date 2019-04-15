@@ -12,6 +12,7 @@ Depends:
     rcdk (>= 3.4.7.1)
 Suggest: knitr, 
     rmarkdown,
+    readr,
     roxygen2,
     testthat,
 License: GPL

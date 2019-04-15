@@ -63,7 +63,12 @@ RAW <- read.raw(rawfile, rawDiag = TRUE)
 
 ```{r}
 mz <- 296.116
-	
+
+# alternative
+do.isotopes(molecule)
+get.exact.mass(molecule) + 1.007
+
+
 XIC <- readXICs(rawfile, mz)
 
 plot(XIC)
@@ -146,8 +151,37 @@ MS2Scans <- lapply(MS2Scans,
 ```
 
 
-
 ```{r match}
 rv.match <- matchFragment(MS2Scans, fragments = df.frags, FUN=sum)
 kable(rv.match)
 ```
+
+
+# 20190415 Analysis
+
+```{r preparation}
+library(readr)
+library(uvpd)
+ThermoUVPD_feb2019 <- read_csv(file.path(system.file(package = 'uvpd'), "/extdata/ThermoUVPD_feb2019.csv"))
+
+names(ThermoUVPD_feb2019)
+molecules <- lapply(ThermoUVPD_feb2019$SMILES, function(x){mol <- parse.smiles(x)[[1]]; do.isotopes(mol); mol})
+mass <-  sapply(molecules, FUN=get.exact.mass) + 1.007
+
+
+```
+
+```{r extractXICs, eval=FALSE}
+library(ggplot2)
+rawfiles <- scan(file.path(system.file(package = 'uvpd'), "/extdata/rawfiles.txt"), what = character())
+pdf("/tmp/out.pdf", 19,12)
+rv<-lapply(rawfiles, function(rawfile){
+  XIC <- readXICs(rawfile, mass)
+  gp <- plot(XIC) + facet_wrap(~mass)
+  print(gp)
+})
+dev.off()
+
+```
+
+

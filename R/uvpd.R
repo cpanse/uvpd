@@ -68,6 +68,11 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
 
 
 .matchFragment <- function(x, fragments, errorCutOff=0.001, plot=FALSE){
+  
+  if (length(x$mZ) < 1){
+    warning("no mZ values.")
+    return(NULL)
+  }
   # compute match
   idx.NN <- findNN(x$mZ, fragments$mZ)
   
@@ -81,7 +86,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   
   hit.idx <- idx.NN[hits]
   
-  hit.df <- df.frags[idx.NN[hits], ]
+  hit.df <- fragments[idx.NN[hits], ]
   hit.df$intensity <- intensity.hits
   
   
@@ -102,7 +107,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
     
     
     
-    text(df.frags$mZ[hit.idx],
+    text(fragments$mZ[hit.idx],
          rep(max(x$intensity)/2, length(hit.idx)),
          paste(df.frags$formula[hit.idx], df.frags$type[hit.idx], round(df.frags$mZ[hit.idx],2)),
          srt=90, pos=rep(c(2,1), length(hit.idx)/2), cex=0.4)
@@ -127,13 +132,18 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
 matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, FUN=sum, ...){
   
   rv <- lapply(MS2Scans, FUN = .matchFragment, fragments = fragments, errorCutOff = errorCutOff)
+  S <- do.call('rbind', rv)
+  if (nrow(S)>0){
+    
   
   S <- aggregate(intensity ~ mZ + type + SMILES + formula, 
-                 data=do.call('rbind', rv),
+                 data=S,
                  FUN=FUN)
   
   S <- S[order(S$mZ),]
   rownames(S) <- 1:nrow(S)
-  S
+  return(S)
+  }
+  NULL
 }
   

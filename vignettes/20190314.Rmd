@@ -138,17 +138,10 @@ write.csv(file='peaklist1.csv', data.frame(mZ=MS2Scans[[1]]$mZ,
 ```{r MS2filtering}
 # filtering 
 
-.filterMS2Scans <- function(y, ...){
-  lapply(y,
-         function(x){
-           rv <- x; 
-           idx <- x$intensity > 0; 
-           x$mZ <- x$mZ[idx]; 
-           x$intensity <- x$intensity[idx]; 
-           x})
-}
 
-MS2Scans <- .filterMS2Scans(MS2Scans)
+uvpd:::.filterMS2Scans
+
+MS2Scans <- uvpd:::.filterMS2Scans(MS2Scans)
 
 ```
 
@@ -235,69 +228,24 @@ dev.off()
 ```
 
 ## extract scan numbers 
-```{r}
 
-.extractScanNumbers <- function(x, eps.mZ = 0.05, eps.rt=0.5, df, ...){
-  rawfile <- x$rawfile[1]
-  
-  RAW <- read.raw(rawfile)
-  RAW <- RAW[RAW$MSOrder == "Ms2", ]
-  
-  rv <- lapply(1:length(x$mass), function(i){
-   
-    mz <- x$mass[i]
-    
-    rt.max <- x$rt.max[i] 
-    
-    filter <- mz - eps.mZ < RAW$PrecursorMass & 
-      RAW$PrecursorMass <  mz + eps.mZ &
-      rt.max - eps.rt < RAW$StartTime &
-      RAW$StartTime <= rt.max + eps.rt
-    
-    sn <-RAW$scanNumber[filter]
-    
-    
-    # df <- data.frame(scanNumber=sn, error.mZ=abs(RAW$PrecursorMass[filter]-mz))
-    
-    if(length(sn) > 0){
-       print(paste("id", i))
-      MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
-      smiles <- as.character(droplevels(mass.smiles$smiles[abs(mass.smiles$mass - mz) < 0.001]))[1]
-      print(smiles)
-      
-      df.frags <- getFragments(smiles, treeDepth=1)
-      df.frags <- na.omit(df.frags)
-      
-      print(length(MS2Scans))
-      print(dim(df.frags))
-      
-      rv.match <- matchFragment(MS2Scans, fragments = df.frags, FUN=sum)
-      
-      print(dim(rv.match))
-      if(!is.null(rv.match)){
-        
-        rv.match$rawfile <- rawfile
-        rv.match$mass <- mz
-        rv.match$rt.max <- rt.max
-        rv.match$SMILES0 <- smiles
-        rv.match$nMS2Scans <- length(sn)
-        print("---")
-        return(rv.match)}
-      }
-    return (NULL)
-  })
-  do.call('rbind', rv)
- #rv
-}
+```{r}
+.extractScanNumbers
 ```
 
 ```{r numberCrunching}
-S <- lapply(rv, function(x){try(.extractScanNumbers)})
+S <- lapply(rv, function(x){try(uvpd:::.extractScanNumbers(x))})
 #S <- do.call('rbind', mclapply(rv, .extractScanNumbers, mc.cores=4))
 ```
 
 ```{r xyplot, fig.retina=3, fig.height=10, fig.width=24}
-SS <- do.call('rbind', S)
-xyplot(log(intensity,10) ~ mZ | SMILES0 * basename(rawfile), groups = type, data=SS, type='h')
+#SS <- do.call('rbind', S)
+lapply(S[6:15], function(x){
+  if(is.null(x)){return(NULL)}
+xyplot(log(intensity,10) ~ mZ | SMILES0 * basename(rawfile),
+       groups = type, 
+       data=x, 
+       type='h')
+})
 ```
 

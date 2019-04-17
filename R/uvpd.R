@@ -66,6 +66,68 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   df[idx, ]
 }
 
+.filterMS2Scans <- function(y, ...){
+  lapply(y,
+         function(x){
+           rv <- x; 
+           idx <- x$intensity > 0; 
+           x$mZ <- x$mZ[idx]; 
+           x$intensity <- x$intensity[idx]; 
+           x})
+}
+
+.extractScanNumbers <- function(x, eps.mZ = 0.05, eps.rt=0.5, df, ...){
+  rawfile <- x$rawfile[1]
+  
+  RAW <- read.raw(rawfile)
+  RAW <- RAW[RAW$MSOrder == "Ms2", ]
+  
+  rv <- lapply(1:length(x$mass), function(i){
+    
+    mz <- x$mass[i]
+    
+    rt.max <- x$rt.max[i] 
+    
+    filter <- mz - eps.mZ < RAW$PrecursorMass & 
+      RAW$PrecursorMass <  mz + eps.mZ &
+      rt.max - eps.rt < RAW$StartTime &
+      RAW$StartTime <= rt.max + eps.rt
+    
+    sn <-RAW$scanNumber[filter]
+    
+    
+    # df <- data.frame(scanNumber=sn, error.mZ=abs(RAW$PrecursorMass[filter]-mz))
+    
+    if(length(sn) > 0){
+      print(paste("id", i))
+      MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
+      smiles <- as.character(droplevels(mass.smiles$smiles[abs(mass.smiles$mass - mz) < 0.001]))[1]
+      print(smiles)
+      
+      df.frags <- getFragments(smiles, treeDepth=1)
+      df.frags <- na.omit(df.frags)
+      
+      print(length(MS2Scans))
+      print(dim(df.frags))
+      
+      rv.match <- matchFragment(MS2Scans, fragments = df.frags, FUN=sum)
+      
+      print(dim(rv.match))
+      if(!is.null(rv.match)){
+        
+        rv.match$rawfile <- rawfile
+        rv.match$mass <- mz
+        rv.match$rt.max <- rt.max
+        rv.match$SMILES0 <- smiles
+        rv.match$nMS2Scans <- length(sn)
+        print("---")
+        return(rv.match)}
+    }
+    return (NULL)
+  })
+  do.call('rbind', rv)
+  #rv
+}
 
 .matchFragment <- function(x, fragments, errorCutOff=0.001, plot=FALSE){
   

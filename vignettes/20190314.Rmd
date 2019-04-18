@@ -154,24 +154,24 @@ kable(rv.match)
 
 # 20190415 Analysis
 
+## Read Input
+
+### csv file with SMILES
 ```{r preparation}
+
 library(readr)
 library(uvpd)
 
 ThermoUVPD_feb2019 <- read_csv(file.path(system.file(package = 'uvpd'),
                                          "/extdata/ThermoUVPD_feb2019.csv"))
 
-names(ThermoUVPD_feb2019)
-molecules <- lapply(ThermoUVPD_feb2019$SMILES, function(x){
-  mol <- parse.smiles(x)[[1]]; do.isotopes(mol); mol})
-
-mass <-  sapply(molecules, FUN=get.exact.mass) + 1.007
 
 
-mass.smiles <- data.frame(mass=mass, smiles=ThermoUVPD_feb2019$SMILES)
 ```
 
-```{r extractXICs, eval=FALSE}
+###  Mass Spec generated rawfiles
+
+```{r}
 library(ggplot2)
 library(parallel)
 library(uvpd)
@@ -182,21 +182,21 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 
 rawfiles <- rawfiles[!grepl("blank_", rawfiles)]
 rawfiles <- rawfiles[!grepl("Blank_", rawfiles)]
-rawfiles <- rawfiles[file.exists(rawfiles)]
-
-
-
-# pdf("/tmp/uvpd2.pdf", 19,12)
-X <- lapply(rawfiles, function(rawfile){
- rv <- try(uvpd:::.extractXICs(rawfile, smiles=ThermoUVPD_feb2019$SMILES))
-})
-#dev.off()
-
+rawfiles <- rawfiles[!grepl("neg", rawfiles)]
+(rawfiles <- rawfiles[file.exists(rawfiles)])
 
 ```
 
+## Extract XICs
+
+```{r extractXICs, eval=FALSE}
+X <- lapply(rawfiles, function(rawfile){
+ rv <- try(uvpd:::.extractXICs(rawfile, smiles=ThermoUVPD_feb2019$SMILES, mZoffset=1.007))
+})
+```
 
 
+## Compute Matches
 ```{r numberCrunching}
 S <- lapply(X, function(x){try(uvpd:::.computeMatch(x))})
 #S <- do.call('rbind', mclapply(rv, .extractScanNumbers, mc.cores=4))

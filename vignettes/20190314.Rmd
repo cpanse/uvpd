@@ -77,12 +77,14 @@ plot(XIC)
 ### Get Ms2 Scannumbers
 
 ```{r}
+eps <- 0.01
+sn <- RAW$scanNumber[which(mz-eps< RAW$PrecursorMass & RAW$PrecursorMass < mz + eps)]
 ```
 
 ### Get Ms2 Scans
 
 
-```{r}
+```{r MS2Scans}
 plot.MS2Scans <- function (x, y, ...) 
 {
     plot(x$mZ, x$intensity, type = "h", main = x$title, xlab = "m/Z", 
@@ -189,7 +191,7 @@ rawfiles <- rawfiles[!grepl("neg", rawfiles)]
 
 ## Extract XICs
 
-```{r extractXICs, eval=FALSE}
+```{r extractXICs}
 X <- lapply(rawfiles, function(rawfile){
  rv <- try(uvpd:::.extractXICs(rawfile, smiles=ThermoUVPD_feb2019$SMILES, mZoffset=1.007))
 })
@@ -197,19 +199,30 @@ X <- lapply(rawfiles, function(rawfile){
 
 
 ## Compute Matches
-```{r numberCrunching}
+```{r numberCrunching, message=FALSE}
 S <- lapply(X, function(x){try(uvpd:::.computeMatch(x))})
 #S <- do.call('rbind', mclapply(rv, .extractScanNumbers, mc.cores=4))
 ```
 
-```{r xyplot, fig.retina=3, fig.height=10, fig.width=24}
-#SS <- do.call('rbind', S)
-lapply(S[6:15], function(x){
-  if(is.null(x)){return(NULL)}
-xyplot(log(intensity,10) ~ mZ | SMILES0 * basename(rawfile),
-       groups = type, 
-       data=x, 
-       type='h')
-})
+
+### Trellis
+```{r}
+SS <- do.call('rbind', S)
+library(lattice)
+```
+
+```{r}
+#table(SS$type)
+
+```
+
+```{r xyplotAll, fig.retina=3, fig.width=30, fig.height=20}
+xp <- xyplot(log(intensity, 10) ~ mZ |  basename(rawfile) * SMILES0,
+        groups =type, 
+         data=SS, 
+         type='h')
+
+#print(xp)
+
 ```
 

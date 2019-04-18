@@ -8,7 +8,7 @@
 #' @return a \code{data.frame} containing the SMILES and MH1P charged fragments.
 #' @author AB,CP 2019
 #' @export getFragments
-#' @import rcdk
+#' @importFrom  rcdk get.smiles get.mol2formula
 #' @importFrom metfRag frag.generateFragments
 #' @examples
 #' df <- getFragments(treeDepth = 1)
@@ -78,23 +78,24 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
 
 
 # INPUT rawfile, vector of mass
-.extractXICs <- function(rawfile, smiles, method='rt'){
+.extractXICs <- function(rawfile, smiles, mZoffset=1.007, method='rt'){
   
   molecules <- lapply(smiles, function(x){
     mol <- parse.smiles(x)[[1]]; 
     do.isotopes(mol); mol
   })
   
-  mass <-  sapply(molecules, FUN=get.exact.mass) + 1.007
+  mass <-  sapply(molecules, FUN=get.exact.mass) + mZoffset
   
   XIC <- readXICs(rawfile, mass, tol = 30)
-  XIC <- lapply(1:length(XIC), function(i){x<-XIC[[i]]; x$smiles <- smiles[i];x})
+  XIC <- lapply(1:length(XIC),
+                function(i){x<-XIC[[i]]; x$smiles <- smiles[i]; x})
   
   # filter
   XIC <- lapply(XIC, function(x){
     if (max(x$intensities) < 1000 || 
         length(x$intensities) < 6 || 
-        5 * median(x$intensities)> max(x$intensities)){
+        5 * median(x$intensities) > max(x$intensities)){
       return (NULL)
     }
     
@@ -121,6 +122,18 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
 }
 
 
+#' Title
+#'
+#' @param x 
+#' @param eps.mZ 
+#' @param eps.rt 
+#' @param treeDepth 
+#' @param ... 
+#'
+#' @return
+#'
+
+#' @importFrom rawDiag readScans read.raw
 .computeMatch <- function(x, eps.mZ = 0.05, eps.rt=0.5, treeDepth=1, ...){
   
   rawfile <- x$rawfile[1]
@@ -130,7 +143,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   rv <- lapply(1:length(x$mass), function(i){
     
     mz <- x$mass[i]
-    
+    smiles <- as.character(x$smiles0[i])
     rt.max <- x$rt.max[i] 
     
     filter <- mz - eps.mZ < RAW$PrecursorMass & 
@@ -138,37 +151,37 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
       rt.max - eps.rt < RAW$StartTime &
       RAW$StartTime <= rt.max + eps.rt
     
-    sn <- RAW$scanNumber[filter]
-   
+    (sn <- RAW$scanNumber[filter])
+    
     if(length(sn) > 0){
-      print(paste("id", i))
-      
-      
       MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
       
-      df.frags <- getFragments(x$smiles0[i], treeDepth=treeDepth)
+      df.frags <- getFragments(smiles, treeDepth=treeDepth)
       df.frags <- na.omit(df.frags)
       
-      print(length(MS2Scans))
-      print(dim(df.frags))
-      
       rv.match <- matchFragment(MS2Scans, fragments = df.frags, FUN=sum)
+      msg <- paste(i, "id\n",
+                   length(MS2Scans), "#MS2 scans\n", 
+                   nrow(df.frags), "#in-silico fragments\n",
+                   nrow(rv.match), "#found matches\n", 
+                   basename(rawfile), "rawfile\n", 
+                   smiles, "SMILES\n",
+                   mass, "mass\n\n", sep="\t")
+    
       
-      print(dim(rv.match))
       if(!is.null(rv.match)){
-        
+        message(msg)
         rv.match$rawfile <- rawfile
         rv.match$mass <- mz
         rv.match$rt.max <- rt.max
         rv.match$SMILES0 <- smiles
         rv.match$nMS2Scans <- length(sn)
-        print("---")
+        
         return(rv.match)}
     }
     return (NULL)
   })
   do.call('rbind', rv)
-  #rv
 }
 
 .matchFragment <- function(x, fragments, errorCutOff=0.001, plot=FALSE){

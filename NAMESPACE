@@ -2,5 +2,8 @@
 
 export(getFragments)
 export(matchFragment)
-import(rcdk)
 importFrom(metfRag,frag.generateFragments)
+importFrom(rawDiag,read.raw)
+importFrom(rawDiag,readScans)
+importFrom(rcdk,get.mol2formula)
+importFrom(rcdk,get.smiles)

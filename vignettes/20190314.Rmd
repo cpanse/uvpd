@@ -105,7 +105,7 @@ MS2Scans <- readScans(rawfile = rawfile, queryScannumbers)
 ## Implement getFragments method
 
 ```{r}
-getFragments
+# getFragments
 ```
 
 example call
@@ -184,57 +184,21 @@ rawfiles <- rawfiles[!grepl("blank_", rawfiles)]
 rawfiles <- rawfiles[!grepl("Blank_", rawfiles)]
 rawfiles <- rawfiles[file.exists(rawfiles)]
 
-xxxx <- function(rawfile, mass, method='rt'){
-  
-  XIC <- readXICs(rawfile, mass, tol = 30)
-  
-  # filter
-  XIC <- lapply(XIC, function(x){
-    if (max(x$intensities) < 1000 || 
-        length(x$intensities) < 6 || 
-        5 * median(x$intensities)> max(x$intensities)){
-      return (NULL)
-    }
-    
-    x
-  })
-  
-  XIC <- XIC[which(!sapply (XIC, is.null))]
-  
-  if(method=='plot'){
-  gp <- plot.XICs(XIC) + facet_wrap(~ mass, scales = "free") + labs(title = rawfile)
-  # pdf(paste("/tmp/uvpd--", basename(rawfile),".pdf", sep=''), 19,12)
-  print(gp)
-  }else{
-    rv <- lapply(XIC, function(x){
-      data.frame(mass=x$mass,
-      rt.max=x$times[which(max(x$intensities) == x$intensities)[1]])
-    })
-    do.call('rbind', rv)
-  }
-  # dev.off()
-}
 
 
-pdf("/tmp/uvpd2.pdf", 19,12)
-rv <- lapply(rawfiles, function(rawfile){
- rv <- try(xxxx(rawfile, mass=mass))
- rv$rawfile <- rawfile
- rv
+# pdf("/tmp/uvpd2.pdf", 19,12)
+X <- lapply(rawfiles, function(rawfile){
+ rv <- try(uvpd:::.extractXICs(rawfile, smiles=ThermoUVPD_feb2019$SMILES))
 })
-dev.off()
+#dev.off()
 
 
 ```
 
-## extract scan numbers 
 
-```{r}
-.extractScanNumbers
-```
 
 ```{r numberCrunching}
-S <- lapply(rv, function(x){try(uvpd:::.extractScanNumbers(x))})
+S <- lapply(X, function(x){try(uvpd:::.computeMatch(x))})
 #S <- do.call('rbind', mclapply(rv, .extractScanNumbers, mc.cores=4))
 ```
 

@@ -182,6 +182,7 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 
 rawfiles <- rawfiles[!grepl("blank_", rawfiles)]
 rawfiles <- rawfiles[!grepl("Blank_", rawfiles)]
+rawfiles <- rawfiles[grepl("pos_", rawfiles)]
 rawfiles <- rawfiles[file.exists(rawfiles)]
 
 

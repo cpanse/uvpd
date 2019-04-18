@@ -76,9 +76,54 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
            x})
 }
 
-.extractScanNumbers <- function(x, eps.mZ = 0.05, eps.rt=0.5, df, ...){
-  rawfile <- x$rawfile[1]
+
+# INPUT rawfile, vector of mass
+.extractXICs <- function(rawfile, smiles, method='rt'){
   
+  molecules <- lapply(smiles, function(x){
+    mol <- parse.smiles(x)[[1]]; 
+    do.isotopes(mol); mol
+  })
+  
+  mass <-  sapply(molecules, FUN=get.exact.mass) + 1.007
+  
+  XIC <- readXICs(rawfile, mass, tol = 30)
+  XIC <- lapply(1:length(XIC), function(i){x<-XIC[[i]]; x$smiles <- smiles[i];x})
+  
+  # filter
+  XIC <- lapply(XIC, function(x){
+    if (max(x$intensities) < 1000 || 
+        length(x$intensities) < 6 || 
+        5 * median(x$intensities)> max(x$intensities)){
+      return (NULL)
+    }
+    
+    x
+  })
+  
+  XIC <- XIC[which(!sapply (XIC, is.null))]
+  
+  if(method=='plot'){
+    gp <- plot.XICs(XIC) + facet_wrap(~ mass, scales = "free") + labs(title = rawfile)
+    # pdf(paste("/tmp/uvpd--", basename(rawfile),".pdf", sep=''), 19,12)
+    print(gp)
+  }else{
+    rv <- lapply(XIC, function(x){
+      data.frame(smiles0=x$smiles,
+                 mass=x$mass,
+                 rt.max=x$times[which(max(x$intensities) == x$intensities)[1]])
+    })
+    rv <- do.call('rbind', rv)
+    rv$rawfile <- rawfile
+    rv
+  }
+  # dev.off()
+}
+
+
+.computeMatch <- function(x, eps.mZ = 0.05, eps.rt=0.5, treeDepth=1, ...){
+  
+  rawfile <- x$rawfile[1]
   RAW <- read.raw(rawfile)
   RAW <- RAW[RAW$MSOrder == "Ms2", ]
   
@@ -93,18 +138,15 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
       rt.max - eps.rt < RAW$StartTime &
       RAW$StartTime <= rt.max + eps.rt
     
-    sn <-RAW$scanNumber[filter]
-    
-    
-    # df <- data.frame(scanNumber=sn, error.mZ=abs(RAW$PrecursorMass[filter]-mz))
-    
+    sn <- RAW$scanNumber[filter]
+   
     if(length(sn) > 0){
       print(paste("id", i))
-      MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
-      smiles <- as.character(droplevels(mass.smiles$smiles[abs(mass.smiles$mass - mz) < 0.001]))[1]
-      print(smiles)
       
-      df.frags <- getFragments(smiles, treeDepth=1)
+      
+      MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
+      
+      df.frags <- getFragments(x$smiles0[i], treeDepth=treeDepth)
       df.frags <- na.omit(df.frags)
       
       print(length(MS2Scans))

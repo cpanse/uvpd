@@ -55,6 +55,16 @@ Prepare stocks/mixtures of different concentrations
 data science support for the activity items 1 and 3 in the range of 40h in the
 area of cheminformatic/ (in-silico) mass spectrometry.
 
+
+## Misc
+
+### run docker
+
+```bash
+
+docker run -e PASSWORD=ilse -p 8787:8787 d4dcd727bf88
+```
+
 ## References
 
 - [Evaluation of food-relevant chemicals in the ToxCast high-throughput screening program](https://doi.org/10.1016/j.fct.2016.04.012)

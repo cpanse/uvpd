@@ -1,0 +1,25 @@
+
+
+---
+title: "20190425"
+author: "AB/CP"
+output:
+  html_document:
+    toc_float: true
+    toc: true
+    number_sections: true
+    theme: united
+bibliography: uvpd.bib
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+
+```{r}
+library(uvpd)
+```

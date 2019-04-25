@@ -134,7 +134,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
 #'
 
 #' @importFrom rawDiag readScans read.raw
-.computeMatch <- function(x, eps.mZ = 0.05, eps.rt=0.5, treeDepth=1, ...){
+.computeMatch <- function(x, eps.mZ = 0.05, eps.rt=0.5, treeDepth=1,scanTypeFilter="", ...){
   
   rawfile <- x$rawfile[1]
   RAW <- read.raw(rawfile)
@@ -146,7 +146,8 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
     smiles <- as.character(x$smiles0[i])
     rt.max <- x$rt.max[i] 
     
-    filter <- mz - eps.mZ < RAW$PrecursorMass & 
+    filter <- grepl(scanTypeFilter, RAW$ScanType) &
+      mz - eps.mZ < RAW$PrecursorMass & 
       RAW$PrecursorMass <  mz + eps.mZ &
       rt.max - eps.rt < RAW$StartTime &
       RAW$StartTime <= rt.max + eps.rt
@@ -166,12 +167,13 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
                    nrow(rv.match), "#found matches\n", 
                    basename(rawfile), "rawfile\n", 
                    smiles, "SMILES\n",
-                   mass, "mass\n\n", sep="\t")
+                   mz, "mass\n\n", sep="\t")
     
       
       if(!is.null(rv.match)){
         message(msg)
         rv.match$rawfile <- rawfile
+	rv.match$scanTypeFilter <- scanTypeFilter
         rv.match$mass <- mz
         rv.match$rt.max <- rt.max
         rv.match$SMILES0 <- smiles

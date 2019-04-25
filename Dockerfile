@@ -22,6 +22,7 @@ RUN echo "install.packages('http://fgcz-ms.uzh.ch/~cpanse/rawDiag_0.0.33.tar.gz'
 #RUN echo "install.packages('rcdk', type='source')" | R --no-save
 RUN mkdir /tmp/UVPD
 COPY . /tmp/UVPD/
+COPY . /root/UVPD/
 # RUN cd /tmp && R CMD build UVPD && R CMD INSTALL /tmp/uvpd_*.tar.gz 
 RUN cd /tmp && R CMD build UVPD --no-build-vignettes && R CMD INSTALL /tmp/uvpd_*.tar.gz 
 RUN R --no-save < /tmp/UVPD/tests/testthat/test-install.R

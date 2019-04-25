@@ -58,7 +58,9 @@ area of cheminformatic/ (in-silico) mass spectrometry.
 
 ## Misc
 
-### run docker
+### docker
+
+build and run docker image
 
 ```bash
 git clone git@github.com:cpanse/uvpd.git \

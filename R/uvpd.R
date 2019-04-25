@@ -266,3 +266,27 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
   NULL
 }
   
+
+.getScanType <- function(rawfile){
+  RAW <- read.raw(rawfile)
+  unique(unlist(lapply(RAW$ScanType[RAW$MSOrder=='Ms2'], function(x){paste("@",strsplit(strsplit(x, "@")[[1]][2], " ")[[1]][1],sep='')})))
+}
+
+
+#' Analyse ms2 specs of a given vector of smiles
+#'
+#' @param rawfile 
+#' @param smiles 
+#' @param mZoffset 
+#'
+#' @return 
+#' @export analyze 
+analyze <- function(rawfile, smiles,  mZoffset=1.007){
+  X <- uvpd:::.extractXICs(rawfile, smiles, mZoffset=mZoffset)
+  
+  M <- lapply(.getScanType(rawfile), function(stf){uvpd:::.computeMatch(X, scanTypeFilter=stf)})
+  
+  M <- do.call('rbind', M)
+  #class(M) <- list('data.frame', 'uvpdres')
+  M
+}

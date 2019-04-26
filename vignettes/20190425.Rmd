@@ -1,5 +1,4 @@
 
-
 ---
 title: "20190425"
 author: "AB/CP"
@@ -20,72 +19,111 @@ knitr::opts_chunk$set(echo = TRUE)
 # Load
 
 ```{r}
+library(uvpd)
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 # load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData")
+rawfiles <- scan(file.path(system.file(package = 'uvpd'),
+                           "/extdata/rawfiles.txt"), what = character())
+rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+
 ```
 
 
 # Extract XICs
 
-```{r}
-.extractXICs <- function(rawfile, fragments, mZoffset=1.007, method='rt', tolppm=30){
+```{r message=TRUE}
+.assignAPEX <- function(rawfile, fragments, mZoffset=1.007, method='rt', tolppm=30){
  
   XIC <- readXICs(rawfile, fragments$mass + mZoffset, tol = tolppm)
+  n <- length(fragments$mass)
+  stopifnot(length(XIC) == n)
+
+  fragments$rt.max <- rep(NA, n)
+  fragments$intensity.max <-rep(NA, n)
+  fragments$rawfile <- rawfile
   
-  XIC <- lapply(1:length(XIC),
-                function(i){
-                    x <- XIC[[i]]; 
-                    x$SMILES <- fragments$SMILES[i]; 
-                    x$formula <- fragments$formula[i];
-                    x
-                })
-  
-  # filter
-  XIC <- lapply(XIC, function(x){
-    if (max(x$intensities) < 1000 || 
-        length(x$intensities) < 6 || 
-        5 * median(x$intensities) > max(x$intensities)){
-      return (NULL)
-    }
-    
-    x
-  })
-  
-  XIC <- XIC[which(!sapply (XIC, is.null))]
-  
-  if(method=='plot'){
-      gp <- plot.XICs(XIC) + 
-          facet_wrap(~ mass, scales = "free") + 
-          labs(title = rawfile)
+  for (i in 1:n){
+    try({
       
-      print(gp)
-  }else{
-      rv <- lapply(XIC, function(x){
-          data.frame(smiles0=x$smiles,
-                     mass=x$mass,
-                     rt.max=x$times[which(max(x$intensities) == x$intensities)[1]])
-      })
-      rv <- do.call('rbind', rv)
-      rv$rawfile <- rawfile
-      rv
+      if ("intensities" %in% names(XIC[[i]]) & length(XIC[[i]]$intensities) > 0){
+        intensity.max <- max(XIC[[i]]$intensities, na.rm = TRUE)
+        
+        if (intensity.max < 1000 || 
+            length(XIC[[i]]$intensities) < 6 || 
+            5 * median(XIC[[i]]$intensities) > intensity.max){
+          
+        }else{
+          
+          fragments$rt.max[i] <- XIC[[i]]$times[which(intensity.max == XIC[[i]]$intensities)[1]]
+          fragments$intensity.max[i] <- intensity.max
+        }
+        
+      }
+    })
   }
+  
+  fragments
+}
+```
+
+```{r message=TRUE}
+.assignMatchedFragmentIons <- function(fragments, mZoffset=1.007, eps.mZ = 0.05,
+                                       eps.rt = 0.5, scanTypeFilter = "", ...){
+  n <- length(fragments$mass)
+  
+  RAW <- read.raw(fragments$rawfile)
+  RAW <- RAW[RAW$MSOrder == "Ms2", ]
+  
+  res <- lapply(which(!is.na(fragments$rt.max)), function(i){
+    print(i)
+    mz <- fragments$mass[i] + mZoffset
+    rt.max <- fragments$rt.max[i] 
+    
+    filter <- grepl(scanTypeFilter, RAW$ScanType) &
+      mz - eps.mZ < RAW$PrecursorMass & 
+      RAW$PrecursorMass <  mz + eps.mZ &
+      rt.max - eps.rt < RAW$StartTime &
+      RAW$StartTime <= rt.max + eps.rt
+  
+    
+    if (sum(filter) > 0){
+       scans <- RAW$scanNumber[filter]
+   
+       
+      MS2Scans <- uvpd:::.filterMS2Scans(readScans(fragments$rawfile, scans))
+     
+      df <- uvpd::matchFragment(MS2Scans, fragments = na.omit(fragments$ms2[[i]]), ...)
+      df$rawfile <- fragments$rawfile
+      df$scanTypeFilter <- scanTypeFilter
+      df$SMILE0 <- fragments$SMILES[i]
+      df$mass <- fragments$mass[i]
+      
+      df
+    }
+  })
 }
 
 ```
 
-```{r extractXICs}
-X <- lapply(rawfiles, function(rawfile){
- rv <- try(.extractXICs(rawfile, fragments.treeDepth1, mZoffset=1.007))
-})
+
+```{r message=TRUE}
+X <- .assignAPEX(rawfiles[20], fragments.treeDepth1)
+XX <- .assignMatchedFragmentIons(X)
 ```
 
+```{r extractXICs, eval=FALSE}
+library(parallel)
+X <- mclapply(rawfiles[24:34], FUN = .assignAPEX, fragments=fragments.treeDepth1, mZoffset=1.007, mc.cores = 4)
+#XX <- mclapply(X, FUN=.assignMatchedFragmentIons)
+```
 
+ 
 
 ## Read Input
 
 
 
-```{r}
+```{r, eval=FALSE}
 
 uvpd.summary <- function(object, ...){
     

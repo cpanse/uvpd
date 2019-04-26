@@ -140,10 +140,10 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   RAW <- read.raw(rawfile)
   RAW <- RAW[RAW$MSOrder == "Ms2", ]
   
-  rv <- lapply(1:length(x$mass), function(i){
+  rv <- lapply(1:nrow(x), function(i){
     
     mz <- x$mass[i]
-    smiles <- as.character(x$smiles0[i])
+    smiles <- x$SMILES0[i]
     rt.max <- x$rt.max[i] 
     
     filter <- grepl(scanTypeFilter, RAW$ScanType) &
@@ -157,7 +157,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
     if(length(sn) > 0){
       MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
       
-      df.frags <- getFragments(smiles, treeDepth=treeDepth)
+      #df.frags <- getFragments(smiles, treeDepth=treeDepth)
       df.frags <- na.omit(df.frags)
       
       rv.match <- matchFragment(MS2Scans, fragments = df.frags, FUN=sum)

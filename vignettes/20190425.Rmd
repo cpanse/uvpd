@@ -17,48 +17,35 @@ bibliography: uvpd.bib
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
+# Load
 
 ```{r}
-library(uvpd)
+load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData")
 ```
+
+
 
 
 ## Read Input
 
-### csv file with SMILES
-```{r preparation}
 
-library(readr)
-library(uvpd)
-
-ThermoUVPD_feb2019 <- read_csv(file.path(system.file(package = 'uvpd'),
-                                         "/extdata/ThermoUVPD_feb2019.csv"))
-
-
-rawfiles <- scan(file.path(system.file(package = 'uvpd'),
-                           "/extdata/rawfiles.txt"), what = character())
-rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
-#rawfiles <- rawfiles[grepl("KWR", rawfiles)]
-
-rawfiles <- rawfiles[!grepl("blank_", rawfiles)]
-rawfiles <- rawfiles[!grepl("Blank_", rawfiles)]
-rawfiles <- rawfiles[!grepl("neg", rawfiles)]
-(rawfiles <- rawfiles[file.exists(rawfiles)])
-```
 
 ```{r}
 
+uvpd.summary <- function(object, ...){
+    
+   list(
+        sum=aggregate(log(intensity, 10) ~  scanTypeFilter * SMILES0 * rawfile , data=object, FUN=sum),
+    length=aggregate(log(intensity, 10) ~  scanTypeFilter * SMILES0 * rawfile , data=object, FUN=length),
+     quantile=aggregate(log(intensity, 10) ~  scanTypeFilter * SMILES0 * rawfile , data=object, FUN=quantile)
+    )
+}
 ```
 
-```{r compute}
 
+```{r fig.retina=3, fig.width=19, fig.height=12}
+KWRpos <- lapply(rawfiles[grepl("KWR.+(HCD|UVPD)", rawfiles)], analyze, smiles=ThermoUVPD_feb2019$SMILES)
+lapply(KWRpos, function(x){try(uvpd.summary(x))})
 
-```
-
-```{r fig.retina=3, fig.width=30, fig.height=12}
-library(lattice)
-names(M)
-xyplot(log(intensity, 10) ~ mZ |  scanTypeFilter * SMILES0 * basename(rawfile) , data=M, type='h', group=type)
+KWRneg <- lapply(rawfiles[grepl("KWR.+(HCD|UVPD)", rawfiles)], analyze, smiles=ThermoUVPD_feb2019$SMILES, mZoffset=-1.007)
 ```

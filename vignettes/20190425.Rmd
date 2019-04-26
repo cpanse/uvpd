@@ -20,9 +20,64 @@ knitr::opts_chunk$set(echo = TRUE)
 # Load
 
 ```{r}
-load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData")
+load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+# load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData")
 ```
 
+
+# Extract XICs
+
+```{r}
+.extractXICs <- function(rawfile, fragments, mZoffset=1.007, method='rt', tolppm=30){
+ 
+  XIC <- readXICs(rawfile, fragments$mass + mZoffset, tol = tolppm)
+  
+  XIC <- lapply(1:length(XIC),
+                function(i){
+                    x <- XIC[[i]]; 
+                    x$SMILES <- fragments$SMILES[i]; 
+                    x$formula <- fragments$formula[i];
+                    x
+                })
+  
+  # filter
+  XIC <- lapply(XIC, function(x){
+    if (max(x$intensities) < 1000 || 
+        length(x$intensities) < 6 || 
+        5 * median(x$intensities) > max(x$intensities)){
+      return (NULL)
+    }
+    
+    x
+  })
+  
+  XIC <- XIC[which(!sapply (XIC, is.null))]
+  
+  if(method=='plot'){
+      gp <- plot.XICs(XIC) + 
+          facet_wrap(~ mass, scales = "free") + 
+          labs(title = rawfile)
+      
+      print(gp)
+  }else{
+      rv <- lapply(XIC, function(x){
+          data.frame(smiles0=x$smiles,
+                     mass=x$mass,
+                     rt.max=x$times[which(max(x$intensities) == x$intensities)[1]])
+      })
+      rv <- do.call('rbind', rv)
+      rv$rawfile <- rawfile
+      rv
+  }
+}
+
+```
+
+```{r extractXICs}
+X <- lapply(rawfiles, function(rawfile){
+ rv <- try(.extractXICs(rawfile, fragments.treeDepth1, mZoffset=1.007))
+})
+```
 
 
 
@@ -43,9 +98,9 @@ uvpd.summary <- function(object, ...){
 ```
 
 
-```{r fig.retina=3, fig.width=19, fig.height=12}
+```{r fig.retina=3, fig.width=19, fig.height=12, eval=FALSE}
 KWRpos <- lapply(rawfiles[grepl("KWR.+(HCD|UVPD)", rawfiles)], analyze, smiles=ThermoUVPD_feb2019$SMILES)
 lapply(KWRpos, function(x){try(uvpd.summary(x))})
-
+    
 KWRneg <- lapply(rawfiles[grepl("KWR.+(HCD|UVPD)", rawfiles)], analyze, smiles=ThermoUVPD_feb2019$SMILES, mZoffset=-1.007)
 ```

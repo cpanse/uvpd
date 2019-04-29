@@ -75,7 +75,7 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
   RAW <- RAW[RAW$MSOrder == "Ms2", ]
   
   res <- lapply(which(!is.na(fragments$rt.max)), function(i){
-    print(i)
+    #print(i)
     mz <- fragments$mass[i] + mZoffset
     rt.max <- fragments$rt.max[i] 
     
@@ -87,9 +87,8 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
   
     
     if (sum(filter) > 0){
-       scans <- RAW$scanNumber[filter]
+      scans <- RAW$scanNumber[filter]
    
-       
       MS2Scans <- uvpd:::.filterMS2Scans(readScans(fragments$rawfile, scans))
      
       df <- uvpd::matchFragment(MS2Scans, fragments = na.omit(fragments$ms2[[i]]), ...)
@@ -97,7 +96,7 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
       df$scanTypeFilter <- scanTypeFilter
       df$SMILE0 <- fragments$SMILES[i]
       df$mass <- fragments$mass[i]
-      
+      df$n <- length(scans)
       df
     }
   })
@@ -107,8 +106,24 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 
 
 ```{r message=TRUE}
-X <- .assignAPEX(rawfiles[20], fragments.treeDepth1)
-XX <- .assignMatchedFragmentIons(X)
+
+fun <- function(rawfile=rawfiles[20]){
+  
+  X <- .assignAPEX(rawfile, fragments.treeDepth1)
+
+  scanTypes <- uvpd:::.getScanType(rawfile)
+  
+  XX <- lapply(scanTypes, function(st){.assignMatchedFragmentIons(X, scanTypeFilter = st, FUN=sum)})
+  
+  XX
+}
+
+funfun<-function(rawfile){
+  xx <- fun(rawfile)
+  xxx <- do.call('rbind', lapply(xx, function(x){do.call('rbind',x[sapply(x, length) == 10])}))
+}
+
+X <- mclapply(rawfiles, funfun, mc.cores=24)
 ```
 
 ```{r extractXICs, eval=FALSE}

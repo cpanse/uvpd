@@ -20,8 +20,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(uvpd)
+
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
-# load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData")
+
 rawfiles <- scan(file.path(system.file(package = 'uvpd'),
                            "/extdata/rawfiles.txt"), what = character())
 rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
@@ -29,46 +30,60 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 ```
 
 
-# Extract XICs
+# Algorithm
 
-```{r message=TRUE}
-.assignAPEX
+## INPUT:
+
+- in-silico fragment ion spectra of a given set of SMILES 
+- ThermoFisher raw file
+
+## STEP1: 
+
+- dermines APEX(MS1) of each molecule mass return rt for each given mass; 
+
+## STEP2: 
+
+- extract MS2 at a given rt and precursor window
+
+## STEP3: 
+
+- compute match between in-silico and MS2 fragment specs 
+
+## STEP4: 
+
+- aggregate (default \code{FUN=sum}) matches using
+- \code{intensity ~ mZ + type + SMILES + formula}.
+ where mZ are the matched fragment ion mass, type is fragment type,e.g., MH1P.
+
+## OUTPUT: 
+
+- a \code{data.frame} object having the column names
+\code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile',
+   'scanTypeFilter', 'SMILES0', 'formula0', 'mass', 'n'}.
+
+# Example
+
+## INPUT:
+
+### MS2 fragments computed out of the SMILES
+```{r}
+head(fragments.treeDepth1$SMILES)
+head(fragments.treeDepth1$mass)
+head(fragments.treeDepth1$ms2[[1]])
 ```
 
-```{r message=TRUE}
-.assignMatchedFragmentIons
+### Thermo Fisher rawfile
+
+```{r}
+(rawfile <- rawfiles[20])
 ```
 
+## STEP 1-4 
 
-```{r message=TRUE}
-
-
-X <- mclapply(rawfiles, funfun, mc.cores=24)
+```{r message=FALSE, warning=FALSE}
+S <- analyze(rawfile, fragments.treeDepth1)
 ```
 
-```{r extractXICs, eval=FALSE}
-library(parallel)
-X <- mclapply(rawfiles[24:34], FUN = .assignAPEX, fragments=fragments.treeDepth1, mZoffset=1.007, mc.cores = 4)
-#XX <- mclapply(X, FUN=.assignMatchedFragmentIons)
-```
-
- 
-
-## Read Input
-
-
-
-```{r, eval=FALSE}
-
-uvpd.summary <- function(object, ...){
-    
-   list(
-        sum=aggregate(log(intensity, 10) ~  scanTypeFilter * SMILES0 * rawfile , data=object, FUN=sum),
-    length=aggregate(log(intensity, 10) ~  scanTypeFilter * SMILES0 * rawfile , data=object, FUN=length),
-     quantile=aggregate(log(intensity, 10) ~  scanTypeFilter * SMILES0 * rawfile , data=object, FUN=quantile)
-    )
-}
-```
 
 
 ```{r fig.retina=3, fig.width=19, fig.height=12, eval=FALSE}

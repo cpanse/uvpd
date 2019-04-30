@@ -10,7 +10,7 @@ analyze(rawfile, fragments, ...)
 \arguments{
 \item{rawfile}{filepath to a Thermo Fisher rawfile}
 
-\item{...}{passed to the other functions}
+\item{...}{passed to \code{uvpd:::.assignMatchedFragmentIons}, e.g. \code{FUN=sum}.}
 }
 \value{
 returns a \code{data.frame} object
@@ -19,35 +19,55 @@ returns a \code{data.frame} object
 Perfom analyses run
 }
 \details{
-Input:
+INPUT:
 \itemize{
-\item in-silicom fragment ion spectra of a given set of SMILES 
+\item in-silico fragment ion spectra of a given set of SMILES 
 \item ThermoFisher raw file
 }
 
-STEP1: dermines APEX of each molecule mass
+STEP1: 
+ \itemize{
+ \item dermines APEX(MS1) of each molecule mass return rt for each given mass; 
+}
 
-STEP2: compute match beween in-silico and MS2 specs
+STEP2: 
+\itemize{
+\item extract MS2 at a given rt and precursor window
+}
 
-STEP3: aggregate matches
+STEP3: 
+\itemize{
+\item compute match between in-silico and MS2 fragment specs 
+}
 
-OUTPUT: a \code{data.frame} object having the column names
-\code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile', 'scanTypeFilter', 'SMILE0', 'mass', 'n'}.
+STEP4: 
+\itemize{
+\item aggregate (default \code{FUN=sum}) matches using
+\code{intensity ~ mZ + type + SMILES + formula}.
+where mZ are the matched fragment ion mass, type is fragment type,e.g., MH1P.
+}
+OUTPUT: 
+\itemize{
+\item a \code{data.frame} object having the column names
+\code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile',
+  'scanTypeFilter', 'SMILES0', 'formula0', 'mass', 'n'}.
+}
 }
 \examples{
 library(uvpd)
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
-load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData") 
+
 rawfiles <- scan(file.path(system.file(package = 'uvpd'),
   "/extdata/rawfiles.txt"), what = character())
-  rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+  
+rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 
 \dontrun{
 S1 <- analyze(rawfiles[20], fragments.treeDepth1)
 
-S2 <- mclapply(rawfiles[c(20,22,23()], analyze, fragments=fragments.treeDepth1)
+S2 <- lapply(rawfiles[c(15:20)], analyze, fragments=fragments.treeDepth1)
 }
 }
 \author{
-Christian Panse <cp@fgcz.ethz.ch>
+Christian Panse <cp@fgcz.ethz.ch>, 2019
 }

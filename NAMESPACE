@@ -3,6 +3,7 @@
 export(analyze)
 export(getFragments)
 export(matchFragment)
+export(summary.uvpd)
 importFrom(metfRag,frag.generateFragments)
 importFrom(rawDiag,read.raw)
 importFrom(rawDiag,readScans)

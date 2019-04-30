@@ -259,6 +259,7 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
                  data=S,
                  FUN=FUN)
   
+  attr(S, 'formula') <- "intensity ~ mZ + type + SMILES + formula"
   S <- S[order(S$mZ),]
   rownames(S) <- 1:nrow(S)
   return(S)
@@ -344,13 +345,29 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' Perfom analyses run
 #'
 #' @param rawfile filepath to a Thermo Fisher rawfile
-#' @param fragments in-silico computed fragment ions of smile codes.
-#' see \code\{link{getFragments}}
+#' @param fragments in-silico computed fragment ions of smile codes. see \code\{link{getFragments}}
 #' @param ... passed to the other functions
 #' @author Christian Panse <cp@fgcz.ethz.ch>
 #' @return returns a \code{data.frame} object
 #' @export analyze
+#' @aliases summary.uvpd
+#' 
+#' @details 
+#' Input:
+#' \itemize{
+#' \item in-silicom fragment ion spectra of a given set of SMILES 
+#' \item ThermoFisher raw file
+#' }
+#' 
+#' STEP1: dermines APEX of each molecule mass
+#' 
+#' STEP2: compute match beween in-silico and MS2 specs
+#' 
+#' STEP3: aggregate matches
 #'
+#' OUTPUT: a \code{data.frame} object having the column names
+#' \code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile', 'scanTypeFilter', 'SMILE0', 'mass', 'n'}.
+#' 
 #' @examples 
 #' library(uvpd)
 #' load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
@@ -360,9 +377,9 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #'   rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 #' 
 #' \dontrun{
-#' S1 <- uvpd::analyze(rawfiles[20], fragments.treeDepth1)
+#' S1 <- analyze(rawfiles[20], fragments.treeDepth1)
 #' 
-#' S2 <- mclapply(rawfiles[c(20,22,23()], uvpd::analyze, fragments=fragments.treeDepth1)
+#' S2 <- mclapply(rawfiles[c(20,22,23()], analyze, fragments=fragments.treeDepth1)
 #' }
 analyze <- function(rawfile, fragments, ...){
   
@@ -377,4 +394,23 @@ analyze <- function(rawfile, fragments, ...){
   
   # does some list cosmetics
   XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 10])}))
+  
+  class(XXX) <- c(class(XXX), "uvpd")
+  XXX
+}
+
+summary.uvpd <- function(object, ...){
+  cat("\nscanTypeFilters:\n\t")
+  print(table(object$scanTypeFilter))
+ 
+  cat("\n\nrawfile:\n\t")
+  print(table(object$rawfile))
+   
+  cat("\n\nformula for aggregation:\n\t")
+  cat(attr(S1, 'formula'))
+  
+  cat("\n\n")
+  print(aggregate(intensity ~ scanTypeFilter, data=object, FUN=sum))
+  cat("\n")
+  print(aggregate(intensity ~ scanTypeFilter, data=object, FUN=length))
 }

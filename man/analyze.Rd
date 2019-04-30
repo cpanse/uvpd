@@ -5,7 +5,7 @@
 \alias{summary.uvpd}
 \title{Perfom analyses run}
 \usage{
-analyze(rawfile, fragments, ...)
+analyze(rawfile, fragments, mZoffset = 1.007, errorCutOff = 1e-04)
 }
 \arguments{
 \item{rawfile}{filepath to a Thermo Fisher rawfile}
@@ -66,6 +66,16 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 S1 <- analyze(rawfiles[20], fragments.treeDepth1)
 
 S2 <- lapply(rawfiles[c(15:20)], analyze, fragments=fragments.treeDepth1)
+}
+
+\dontrun{
+rawfile15 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
+rawfile20 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
+
+S15 <- analyze(rawfile15, fragments = fragments.treeDepth1)
+S20 <- analyze(rawfile20, fragments = fragments.treeDepth1)
+
+S<-rbind(S15, S20)
 }
 }
 \author{

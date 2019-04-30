@@ -121,71 +121,6 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   # dev.off()
 }
 
-
-#' Title
-#'
-#' @param x 
-#' @param eps.mZ 
-#' @param eps.rt 
-#' @param treeDepth 
-#' @param ... 
-#'
-#' @return
-#'
-
-#' @importFrom rawDiag readScans read.raw
-.computeMatch <- function(x, eps.mZ = 0.05, eps.rt=0.5, treeDepth=1,scanTypeFilter="", ...){
-  
-  rawfile <- x$rawfile[1]
-  RAW <- read.raw(rawfile)
-  RAW <- RAW[RAW$MSOrder == "Ms2", ]
-  
-  rv <- lapply(1:nrow(x), function(i){
-    
-    mz <- x$mass[i]
-    smiles <- x$SMILES0[i]
-    rt.max <- x$rt.max[i] 
-    
-    filter <- grepl(scanTypeFilter, RAW$ScanType) &
-      mz - eps.mZ < RAW$PrecursorMass & 
-      RAW$PrecursorMass <  mz + eps.mZ &
-      rt.max - eps.rt < RAW$StartTime &
-      RAW$StartTime <= rt.max + eps.rt
-    
-    (sn <- RAW$scanNumber[filter])
-    
-    if(length(sn) > 0){
-      MS2Scans <- .filterMS2Scans(readScans(rawfile, sn))
-      
-      #df.frags <- getFragments(smiles, treeDepth=treeDepth)
-      df.frags <- na.omit(df.frags)
-      
-      rv.match <- matchFragment(MS2Scans, fragments = df.frags, FUN=sum)
-      msg <- paste(i, "id\n",
-                   length(MS2Scans), "#MS2 scans\n", 
-                   nrow(df.frags), "#in-silico fragments\n",
-                   nrow(rv.match), "#found matches\n", 
-                   basename(rawfile), "rawfile\n", 
-                   smiles, "SMILES\n",
-                   mz, "mass\n\n", sep="\t")
-    
-      
-      if(!is.null(rv.match)){
-        message(msg)
-        rv.match$rawfile <- rawfile
-	rv.match$scanTypeFilter <- scanTypeFilter
-        rv.match$mass <- mz
-        rv.match$rt.max <- rt.max
-        rv.match$SMILES0 <- smiles
-        rv.match$nMS2Scans <- length(sn)
-        
-        return(rv.match)}
-    }
-    return (NULL)
-  })
-  do.call('rbind', rv)
-}
-
 .matchFragment <- function(x, fragments, errorCutOff=0.001, plot=FALSE){
   
   if (length(x$mZ) < 1){
@@ -207,7 +142,8 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   
   hit.df <- fragments[idx.NN[hits], ]
   hit.df$intensity <- intensity.hits
-  
+  hit.df$scan <- x$scan
+  hit.df$mZerror <- (x$mZ - fragments$mZ[idx.NN])[hits]
   
   if(plot){
     plot(x$mZ, x$intensity,
@@ -249,22 +185,22 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
 #'
 #' @examples
 matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, FUN=sum, ...){
-  
-  rv <- lapply(MS2Scans, FUN = .matchFragment, fragments = fragments, errorCutOff = errorCutOff)
-  S <- do.call('rbind', rv)
-  if (nrow(S)>0){
     
-  
-  S <- aggregate(intensity ~ mZ + type + SMILES + formula, 
-                 data=S,
-                 FUN=FUN)
-  
-  attr(S, 'formula') <- "intensity ~ mZ + type + SMILES + formula"
-  S <- S[order(S$mZ),]
-  rownames(S) <- 1:nrow(S)
-  return(S)
-  }
-  NULL
+    rv <- lapply(MS2Scans, FUN = .matchFragment, fragments = fragments, errorCutOff = errorCutOff)
+    S <- do.call('rbind', rv)
+    if (nrow(S)>0){
+        
+        
+        #S <- aggregate(intensity ~ mZ + type + SMILES + formula, 
+        #               data=S,
+        #              FUN=FUN)
+        
+        #attr(S, 'formula') <- "intensity ~ mZ + type + SMILES + formula"
+        S <- S[order(S$mZ),]
+        rownames(S) <- 1:nrow(S)
+        return(S)
+    }
+    NULL
 }
   
 
@@ -308,7 +244,7 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 }
 
 .assignMatchedFragmentIons <- function(fragments, mZoffset=1.007, eps.mZ = 0.05,
-                                       eps.rt = 0.5, scanTypeFilter = "", ...){
+                                       eps.rt = 0.5, scanTypeFilter = "", errorCutOff = 0.001){
   n <- length(fragments$mass)
   
   RAW <- read.raw(fragments$rawfile)
@@ -331,7 +267,7 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
       
       MS2Scans <- uvpd:::.filterMS2Scans(readScans(fragments$rawfile, scans))
       
-      df <- matchFragment(MS2Scans, fragments = na.omit(fragments$ms2[[i]]), ...)
+      df <- matchFragment(MS2Scans, fragments = na.omit(fragments$ms2[[i]]), errorCutOff=errorCutOff)
       df$rawfile <- fragments$rawfile
       df$scanTypeFilter <- scanTypeFilter
       df$SMILES0 <- fragments$SMILES[i]
@@ -401,19 +337,34 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' 
 #' S2 <- lapply(rawfiles[c(15:20)], analyze, fragments=fragments.treeDepth1)
 #' }
-analyze <- function(rawfile, fragments, ...){
+#' 
+#' \dontrun{
+#' rawfile15 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
+#' rawfile20 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
+#' 
+#' S15 <- analyze(rawfile15, fragments = fragments.treeDepth1)
+#' S20 <- analyze(rawfile20, fragments = fragments.treeDepth1)
+#' 
+#' S<-rbind(S15, S20)
+#' }
+analyze <- function(rawfile, fragments, mZoffset=1.007, errorCutOff=0.0001){
   
   # 1. extract APEX for a given set of precomputed SMILES fragments
-  X <- .assignAPEX(rawfile, fragments)
+  X <- uvpd:::.assignAPEX(rawfile, fragments,  mZoffset=mZoffset, tolppm=30)
   
   # 2. help function to extract all possible MS2 scanTypes of a rawfile
   scanTypes <- uvpd:::.getScanType(rawfile)
   
   # 3. compute match between in-silico fragments and extracted MS2 scans
-  XX <- lapply(scanTypes, function(st){uvpd:::.assignMatchedFragmentIons(X, scanTypeFilter = st, FUN=sum)})
+  XX <- lapply(scanTypes, function(st){
+      uvpd:::.assignMatchedFragmentIons(X, scanTypeFilter = st,
+                                 mZoffset=mZoffset,
+                                 eps.mZ = 0.05,
+                                 eps.rt = 0.5,
+                                 errorCutOff=errorCutOff)})
   
   # does some list cosmetics
-  XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 11])}))
+  XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 13])}))
   
   class(XXX) <- c(class(XXX), "uvpd")
   

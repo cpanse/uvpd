@@ -341,16 +341,40 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
   })
 }
 
-analyze <- function(rawfile, insilicofragments, ...){
+#' Perfom analyses run
+#'
+#' @param rawfile filepath to a Thermo Fisher rawfile
+#' @param fragments in-silico computed fragment ions of smile codes.
+#' see \code\{link{getFragments}}
+#' @param ... passed to the other functions
+#' @author Christian Panse <cp@fgcz.ethz.ch>
+#' @return returns a \code{data.frame} object
+#' @export analyze
+#'
+#' @examples 
+#' library(uvpd)
+#' load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+#' load("~/__checkouts/R/uvpd/inst/extdata/uvpd-Meuse.RData") 
+#' rawfiles <- scan(file.path(system.file(package = 'uvpd'),
+#'   "/extdata/rawfiles.txt"), what = character())
+#'   rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+#' 
+#' \dontrun{
+#' S1 <- uvpd::analyze(rawfiles[20], fragments.treeDepth1)
+#' 
+#' S2 <- mclapply(rawfiles[c(20,22,23()], uvpd::analyze, fragments=fragments.treeDepth1)
+#' }
+analyze <- function(rawfile, fragments, ...){
   
-  # 1
-  X <- .assignAPEX(rawfile, insilicofragments, ...)
+  # 1. extract APEX for a given set of precomputed SMILES fragments
+  X <- .assignAPEX(rawfile, fragments, ...)
   
-  # 2
+  # 2. help function to extract all possible MS2 scanTypes of a rawfile
   scanTypes <- uvpd:::.getScanType(rawfile)
   
-  # 3
+  # 3. compute match between in-silico fragments and extracted MS2 scans
   XX <- lapply(scanTypes, function(st){uvpd:::.assignMatchedFragmentIons(X, scanTypeFilter = st, FUN=sum)})
   
+  # does some list cosmetics
   XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 10])}))
 }

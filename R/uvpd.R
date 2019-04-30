@@ -133,8 +133,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   error <- abs(x$mZ - fragments$mZ[idx.NN])
   
   hits <- (error < errorCutOff)
-  
-  
+  if (sum(hits)==0){return(NULL)}
   mZ.hits <-fragments$mZ[idx.NN[hits]]
   intensity.hits <- x$intensity[hits]
   
@@ -188,18 +187,22 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
     
     rv <- lapply(MS2Scans, FUN = .matchFragment, fragments = fragments, errorCutOff = errorCutOff)
     S <- do.call('rbind', rv)
-    if (nrow(S)>0){
+    try({
         
         
-        #S <- aggregate(intensity ~ mZ + type + SMILES + formula, 
-        #               data=S,
-        #              FUN=FUN)
-        
-        #attr(S, 'formula') <- "intensity ~ mZ + type + SMILES + formula"
-        S <- S[order(S$mZ),]
-        rownames(S) <- 1:nrow(S)
-        return(S)
-    }
+        if (nrow(S) > 0){
+            
+            
+            #S <- aggregate(intensity ~ mZ + type + SMILES + formula, 
+            #               data=S,
+            #              FUN=FUN)
+            
+            #attr(S, 'formula') <- "intensity ~ mZ + type + SMILES + formula"
+            S <- S[order(S$mZ),]
+            rownames(S) <- 1:nrow(S)
+            return(S)
+        }
+    }, silent = TRUE)
     NULL
 }
   
@@ -282,12 +285,16 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' Perfom analyses run
 #'
 #' @param rawfile filepath to a Thermo Fisher rawfile
-#' @param fragments in-silico computed fragment ions of smile codes. see \code\{link{getFragments}} 
-#' @param ... passed to \code{uvpd:::.assignMatchedFragmentIons}, e.g. \code{FUN=sum}.
+#' @param mZoffset 
+#' @param itol fragment ion tolerance; default is 1mDa.
+#' @param eps.mZ pre-cursor mass tolerance in Da; default is set to 50mDa.
+#' @param eps.rt  retention time window; default is 0.5 minutes.
+#' @param fragments in-silico computed fragment ions of smile codes. see \code\{\link{getFragments}}. 
+#'
 #' @author Christian Panse <cp@fgcz.ethz.ch>, 2019
 #' @return returns a \code{data.frame} object
 #' @export analyze summary.uvpd
-#' @aliases summary.uvpd
+#' @aliases summary.uvpd uvpd analyse
 #' 
 #' @details 
 #' INPUT:
@@ -311,26 +318,33 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' \item compute match between in-silico and MS2 fragment specs 
 #' }
 #' 
-#' STEP4: 
-#' \itemize{
-#' \item aggregate (default \code{FUN=sum}) matches using
-#' \code{intensity ~ mZ + type + SMILES + formula}.
-#' where mZ are the matched fragment ion mass, type is fragment type,e.g., MH1P.
-#'}
 #' OUTPUT: 
 #' \itemize{
 #' \item a \code{data.frame} object having the column names
 #' \code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile',
 #'   'scanTypeFilter', 'SMILES0', 'formula0', 'mass', 'n'}.
 #' }
+#' 
+#' STATISTICS:
+#'   see examples
+#' 
 #' @examples 
 #' library(uvpd)
+#' 
+#' # load in-silico fragments
 #' load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 #' 
+#' # load Thermo Fisher rawfiles
 #' rawfiles <- scan(file.path(system.file(package = 'uvpd'),
 #'   "/extdata/rawfiles.txt"), what = character())
 #'   
-#' rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+#' # filter 
+#' rawfiles <- rawfiles[grepl("Castell|(KWR|stds)|DBPs", rawfiles)]
+#' rawfiles <- rawfiles[!grepl("AcX|blank|Blank", rawfiles)]
+#' 
+#' # DBPs neg
+#' # Castell pos
+#' # KWR std. pos and neg
 #' 
 #' \dontrun{
 #' S1 <- analyze(rawfiles[20], fragments.treeDepth1)
@@ -339,15 +353,20 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' }
 #' 
 #' \dontrun{
-#' rawfile15 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
-#' rawfile20 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
+#' rawfile24 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
+#' rawfile29 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
 #' 
-#' S15 <- analyze(rawfile15, fragments = fragments.treeDepth1)
-#' S20 <- analyze(rawfile20, fragments = fragments.treeDepth1)
+#' S24 <- analyze(rawfile24, fragments = fragments.treeDepth1)
+#' S29 <- analyze(rawfile29, fragments = fragments.treeDepth1)
 #' 
-#' S<-rbind(S15, S20)
+#' S <- rbind(S24, S29)
+#' 
+#' # STATISTICS:
+#' 
+#' aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + n, data=S, FUN=length)
 #' }
-analyze <- function(rawfile, fragments, mZoffset=1.007, errorCutOff=0.0001){
+analyze <- function(rawfile, fragments, mZoffset = 1.007, itol = 0.001,
+                    eps.mZ = 0.05, eps.rt = 0.5){
   
   # 1. extract APEX for a given set of precomputed SMILES fragments
   X <- uvpd:::.assignAPEX(rawfile, fragments,  mZoffset=mZoffset, tolppm=30)
@@ -361,7 +380,7 @@ analyze <- function(rawfile, fragments, mZoffset=1.007, errorCutOff=0.0001){
                                  mZoffset=mZoffset,
                                  eps.mZ = 0.05,
                                  eps.rt = 0.5,
-                                 errorCutOff=errorCutOff)})
+                                 errorCutOff=itol)})
   
   # does some list cosmetics
   XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 13])}))

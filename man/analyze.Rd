@@ -3,14 +3,23 @@
 \name{analyze}
 \alias{analyze}
 \alias{summary.uvpd}
+\alias{uvpd}
+\alias{analyse}
 \title{Perfom analyses run}
 \usage{
-analyze(rawfile, fragments, mZoffset = 1.007, errorCutOff = 1e-04)
+analyze(rawfile, fragments, mZoffset = 1.007, itol = 0.001,
+  eps.mZ = 0.05, eps.rt = 0.5)
 }
 \arguments{
 \item{rawfile}{filepath to a Thermo Fisher rawfile}
 
-\item{...}{passed to \code{uvpd:::.assignMatchedFragmentIons}, e.g. \code{FUN=sum}.}
+\item{mZoffset}{}
+
+\item{itol}{fragment ion tolerance; default is 1mDa.}
+
+\item{eps.mZ}{pre-cursor mass tolerance in Da; default is set to 50mDa.}
+
+\item{eps.rt}{retention time window; default is 0.5 minutes.}
 }
 \value{
 returns a \code{data.frame} object
@@ -40,27 +49,33 @@ STEP3:
 \item compute match between in-silico and MS2 fragment specs 
 }
 
-STEP4: 
-\itemize{
-\item aggregate (default \code{FUN=sum}) matches using
-\code{intensity ~ mZ + type + SMILES + formula}.
-where mZ are the matched fragment ion mass, type is fragment type,e.g., MH1P.
-}
 OUTPUT: 
 \itemize{
 \item a \code{data.frame} object having the column names
 \code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile',
   'scanTypeFilter', 'SMILES0', 'formula0', 'mass', 'n'}.
 }
+
+STATISTICS:
+  see examples
 }
 \examples{
 library(uvpd)
+
+# load in-silico fragments
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 
+# load Thermo Fisher rawfiles
 rawfiles <- scan(file.path(system.file(package = 'uvpd'),
   "/extdata/rawfiles.txt"), what = character())
   
-rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+# filter 
+rawfiles <- rawfiles[grepl("Castell|(KWR|stds)|DBPs", rawfiles)]
+rawfiles <- rawfiles[!grepl("AcX|blank|Blank", rawfiles)]
+
+# DBPs neg
+# Castell pos
+# KWR std. pos and neg
 
 \dontrun{
 S1 <- analyze(rawfiles[20], fragments.treeDepth1)
@@ -69,13 +84,17 @@ S2 <- lapply(rawfiles[c(15:20)], analyze, fragments=fragments.treeDepth1)
 }
 
 \dontrun{
-rawfile15 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
-rawfile20 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
+rawfile24 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
+rawfile29 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
 
-S15 <- analyze(rawfile15, fragments = fragments.treeDepth1)
-S20 <- analyze(rawfile20, fragments = fragments.treeDepth1)
+S24 <- analyze(rawfile24, fragments = fragments.treeDepth1)
+S29 <- analyze(rawfile29, fragments = fragments.treeDepth1)
 
-S<-rbind(S15, S20)
+S <- rbind(S24, S29)
+
+# STATISTICS:
+
+aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + n, data=S, FUN=length)
 }
 }
 \author{

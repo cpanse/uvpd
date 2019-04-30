@@ -19,6 +19,15 @@ get all fragments of a SMILES code
 df <- getFragments(treeDepth = 1)
 plot(table(df$MH1P))
 }
+\references{
+\itemize{
+\item \url{https://cran.r-project.org/package=rcdk}
+\item \url{https://github.com/ipb-halle/MetFragR}
+}
+}
+\seealso{
+\code{exec/make-data.R}
+}
 \author{
 AB,CP 2019
 }

@@ -84,8 +84,13 @@ S2 <- lapply(rawfiles[c(15:20)], analyze, fragments=fragments.treeDepth1)
 }
 
 \dontrun{
+
+
 rawfile24 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
 rawfile29 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
+
+rawfile24 <- rawfiles[24]
+rawfile29 <- rawfiles[29]
 
 S24 <- analyze(rawfile24, fragments = fragments.treeDepth1)
 S29 <- analyze(rawfile29, fragments = fragments.treeDepth1)
@@ -94,7 +99,16 @@ S <- rbind(S24, S29)
 
 # STATISTICS:
 
-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + n, data=S, FUN=length)
+# merge profile data
+SS <- aggregate(intensity ~ mZ + type + SMILES + formula + scan + nfragments + nMS2 + sumMS2intensities + rawfile + scanTypeFilter + SMILES0 + formula0 + mass + nScans, data = S, FUN=sum)
+
+# sum intensities
+SSS<-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + nfragments + nMS2 + sumMS2intensities, data=SS, FUN=sum)
+
+library(lattice)
+
+histogram(~intensity/sumMS2intensities | scanTypeFilter, data=SSS, type='count')
+histogram(~intensity/nfragments | scanTypeFilter, data=SSS, type='count')
 }
 }
 \author{

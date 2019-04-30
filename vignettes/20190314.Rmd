@@ -93,8 +93,6 @@ plot.MS2Scans <- function (x, y, ...)
         ...)
 }
 
-
-
 queryScannumbers <- sn[RAW$StartTime[sn] * 60 > 951 & RAW$StartTime[sn] * 60  < 961]
 MS2Scans <- readScans(rawfile = rawfile, queryScannumbers)
 #lapply(MS2Scans, plot.MS2Scans)

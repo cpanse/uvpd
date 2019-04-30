@@ -10,6 +10,11 @@
 #' @export getFragments
 #' @importFrom  rcdk get.smiles get.mol2formula
 #' @importFrom metfRag frag.generateFragments
+#' @seealso \code{exec/make-data.R}
+#' @references \itemize{
+#' \item \url{https://cran.r-project.org/package=rcdk}
+#' \item \url{https://github.com/ipb-halle/MetFragR}
+#' }
 #' @examples
 #' df <- getFragments(treeDepth = 1)
 #' plot(table(df$MH1P))
@@ -144,6 +149,11 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   hit.df$scan <- x$scan
   hit.df$mZerror <- (x$mZ - fragments$mZ[idx.NN])[hits]
   
+  # for scoring
+  hit.df$nfragments <- length(fragments$mZ)
+  hit.df$nMS2 <- sum(x$intensity > 0)
+  hit.df$sumMS2intensities <- sum(x$intensity)
+  
   if(plot){
     plot(x$mZ, x$intensity,
          type = "h",
@@ -276,7 +286,7 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
       df$SMILES0 <- fragments$SMILES[i]
       df$formula0 <- fragments$formula[i]
       df$mass <- fragments$mass[i]
-      df$n <- length(scans)
+      df$nScans <- length(scans)
       df
     }
   })
@@ -353,9 +363,14 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' }
 #' 
 #' \dontrun{
+#' 
+#' 
 #' rawfile24 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_HCD_20_35_60.raw")
 #' rawfile29 <- file.path(Sys.getenv('HOME'), "Downloads/CastellonStds_pos_UVPD_50_300.raw")
 #' 
+#' rawfile24 <- rawfiles[24]
+#' rawfile29 <- rawfiles[29]
+#'
 #' S24 <- analyze(rawfile24, fragments = fragments.treeDepth1)
 #' S29 <- analyze(rawfile29, fragments = fragments.treeDepth1)
 #' 
@@ -363,7 +378,16 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' 
 #' # STATISTICS:
 #' 
-#' aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + n, data=S, FUN=length)
+#' # merge profile data
+#' SS <- aggregate(intensity ~ mZ + type + SMILES + formula + scan + nfragments + nMS2 + sumMS2intensities + rawfile + scanTypeFilter + SMILES0 + formula0 + mass + nScans, data = S, FUN=sum)
+#' 
+#' # sum intensities
+#' SSS<-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + nfragments + nMS2 + sumMS2intensities, data=SS, FUN=sum)
+#' 
+#' library(lattice)
+#' 
+#' histogram(~intensity/sumMS2intensities | scanTypeFilter, data=SSS, type='count')
+#' histogram(~intensity/nfragments | scanTypeFilter, data=SSS, type='count')
 #' }
 analyze <- function(rawfile, fragments, mZoffset = 1.007, itol = 0.001,
                     eps.mZ = 0.05, eps.rt = 0.5){
@@ -383,7 +407,7 @@ analyze <- function(rawfile, fragments, mZoffset = 1.007, itol = 0.001,
                                  errorCutOff=itol)})
   
   # does some list cosmetics
-  XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 13])}))
+  XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 16])}))
   
   class(XXX) <- c(class(XXX), "uvpd")
   

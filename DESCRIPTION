@@ -22,3 +22,4 @@ Collate:
     zzz.R
 URL: https://github.com/cpanse/UVPD
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr

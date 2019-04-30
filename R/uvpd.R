@@ -425,7 +425,7 @@ summary.uvpd <- function(object, ...){
   print(table(object$rawfile))
    
   cat("\n\nformula for aggregation:\n\t")
-  cat(attr(S1, 'formula'))
+  cat(attr(object, 'formula'))
   
   cat("\n\n")
   print(aggregate(intensity ~ scanTypeFilter, data=object, FUN=sum))

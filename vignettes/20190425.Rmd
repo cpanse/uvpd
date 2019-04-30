@@ -9,6 +9,11 @@ output:
     number_sections: true
     theme: united
 bibliography: uvpd.bib
+vignette: |
+  %\VignetteIndexEntry{Analyze - extract - match - aggregate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+
 ---
 
 
@@ -34,20 +39,21 @@ rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
 
 ## INPUT:
 
-- in-silico fragment ion spectra of a given set of SMILES 
+- in-silico fragment ion spectra of a given set of SMILES ; precomputed by using [@rcdk], [@metFragR]
+
 - ThermoFisher raw file
 
 ## STEP1: 
 
-- dermines APEX(MS1) of each molecule mass return rt for each given mass; 
+- dermines APEX(MS1) of each molecule mass return rt for each given mass; [@rawDiag]
 
 ## STEP2: 
 
-- extract MS2 at a given rt and precursor window
+- extract MS2 at a given rt and precursor window 
 
 ## STEP3: 
 
-- compute match between in-silico and MS2 fragment specs 
+- compute match between in-silico and MS2 fragment specs  [@protViz]
 
 ## STEP4: 
 
@@ -81,14 +87,24 @@ head(fragments.treeDepth1$ms2[[1]])
 ## STEP 1-4 
 
 ```{r message=FALSE, warning=FALSE}
-S <- analyze(rawfile, fragments.treeDepth1)
+if(file.exists(rawfile)){
+  S <- analyze(rawfile, fragments.treeDepth1)
+  summary.uvpd(S)
+  
+  library(knitr)
+  kable(head(S, 20))
+}
 ```
 
+# Session info
 
+Here is the output of `sessionInfo()` on the system on which this
+document was compiled:
 
-```{r fig.retina=3, fig.width=19, fig.height=12, eval=FALSE}
-KWRpos <- lapply(rawfiles[grepl("KWR.+(HCD|UVPD)", rawfiles)], analyze, smiles=ThermoUVPD_feb2019$SMILES)
-lapply(KWRpos, function(x){try(uvpd.summary(x))})
-    
-KWRneg <- lapply(rawfiles[grepl("KWR.+(HCD|UVPD)", rawfiles)], analyze, smiles=ThermoUVPD_feb2019$SMILES, mZoffset=-1.007)
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
 ```
+
+# References
+
+

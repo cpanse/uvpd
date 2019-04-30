@@ -273,20 +273,84 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 }
 
 
-#' Analyse ms2 specs of a given vector of smiles
-#'
-#' @param rawfile 
-#' @param smiles 
-#' @param mZoffset 
-#'
-#' @return 
-#' @export analyze 
-analyze <- function(rawfile, smiles,  mZoffset=1.007){
-  X <- uvpd:::.extractXICs(rawfile, smiles, mZoffset=mZoffset)
+.assignAPEX <- function(rawfile, fragments, mZoffset=1.007, method='rt', tolppm=30){
   
-  M <- lapply(.getScanType(rawfile), function(stf){uvpd:::.computeMatch(X, scanTypeFilter=stf)})
+  XIC <- readXICs(rawfile, fragments$mass + mZoffset, tol = tolppm)
+  n <- length(fragments$mass)
+  stopifnot(length(XIC) == n)
   
-  M <- do.call('rbind', M)
-  #class(M) <- list('data.frame', 'uvpdres')
-  M
+  fragments$rt.max <- rep(NA, n)
+  fragments$intensity.max <-rep(NA, n)
+  fragments$rawfile <- rawfile
+  
+  for (i in 1:n){
+    try({
+      
+      if ("intensities" %in% names(XIC[[i]]) & length(XIC[[i]]$intensities) > 0){
+        intensity.max <- max(XIC[[i]]$intensities, na.rm = TRUE)
+        
+        if (intensity.max < 1000 || 
+            length(XIC[[i]]$intensities) < 6 || 
+            5 * median(XIC[[i]]$intensities) > intensity.max){
+          
+        }else{
+          
+          fragments$rt.max[i] <- XIC[[i]]$times[which(intensity.max == XIC[[i]]$intensities)[1]]
+          fragments$intensity.max[i] <- intensity.max
+        }
+        
+      }
+    })
+  }
+  
+  fragments
+}
+
+.assignMatchedFragmentIons <- function(fragments, mZoffset=1.007, eps.mZ = 0.05,
+                                       eps.rt = 0.5, scanTypeFilter = "", ...){
+  n <- length(fragments$mass)
+  
+  RAW <- read.raw(fragments$rawfile)
+  RAW <- RAW[RAW$MSOrder == "Ms2", ]
+  
+  res <- lapply(which(!is.na(fragments$rt.max)), function(i){
+    #print(i)
+    mz <- fragments$mass[i] + mZoffset
+    rt.max <- fragments$rt.max[i] 
+    
+    filter <- grepl(scanTypeFilter, RAW$ScanType) &
+      mz - eps.mZ < RAW$PrecursorMass & 
+      RAW$PrecursorMass <  mz + eps.mZ &
+      rt.max - eps.rt < RAW$StartTime &
+      RAW$StartTime <= rt.max + eps.rt
+    
+    
+    if (sum(filter) > 0){
+      scans <- RAW$scanNumber[filter]
+      
+      MS2Scans <- uvpd:::.filterMS2Scans(readScans(fragments$rawfile, scans))
+      
+      df <- uvpd::matchFragment(MS2Scans, fragments = na.omit(fragments$ms2[[i]]), ...)
+      df$rawfile <- fragments$rawfile
+      df$scanTypeFilter <- scanTypeFilter
+      df$SMILE0 <- fragments$SMILES[i]
+      df$mass <- fragments$mass[i]
+      df$n <- length(scans)
+      df
+    }
+  })
+}
+
+analyze <- function(rawfile, insilicofragments, ...){
+  
+  # 1
+  X <- .assignAPEX(rawfile, insilicofragments, ...)
+  
+  # 2
+  scanTypes <- uvpd:::.getScanType(rawfile)
+  
+  # 3
+  XX <- lapply(scanTypes, function(st){uvpd:::.assignMatchedFragmentIons(X, scanTypeFilter = st, FUN=sum)})
+  
+  XXX <- do.call('rbind', lapply(XX, function(x){ do.call('rbind',x[sapply(x, length) == 10])}))
 }

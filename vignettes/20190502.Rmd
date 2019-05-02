@@ -1,0 +1,110 @@
+
+---
+title: "20190425"
+author: "AB/CP"
+output:
+  html_document:
+    toc_float: true
+    toc: true
+    number_sections: true
+    theme: united
+bibliography: uvpd.bib
+vignette: |
+  %\VignetteIndexEntry{Analyze - extract - match - aggregate}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Load
+
+```{r}
+library(uvpd)
+
+load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+
+rawfiles <- scan(file.path(system.file(package = 'uvpd'),
+                           "/extdata/rawfiles.txt"), what = character())
+rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+
+```
+
+
+# Algorithm
+
+## INPUT:
+
+- in-silico fragment ion spectra of a given set of SMILES ; precomputed by using [@rcdk], [@metFragR]
+
+- ThermoFisher raw file
+
+## STEP1: 
+
+- dermines APEX(MS1) of each molecule mass return rt for each given mass; [@rawDiag]
+
+## STEP2: 
+
+- extract MS2 at a given rt and precursor window 
+
+## STEP3: 
+
+- compute match between in-silico and MS2 fragment specs  [@protViz]
+
+## STEP4: 
+
+- aggregate (default \code{FUN=sum}) matches using
+- \code{intensity ~ mZ + type + SMILES + formula}.
+ where mZ are the matched fragment ion mass, type is fragment type,e.g., MH1P.
+
+## OUTPUT: 
+
+- a \code{data.frame} object having the column names
+\code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile',
+   'scanTypeFilter', 'SMILES0', 'formula0', 'mass', 'n'}.
+
+# Example
+
+## INPUT:
+
+### MS2 fragments computed out of the SMILES
+```{r}
+head(fragments.treeDepth1$SMILES)
+head(fragments.treeDepth1$mass)
+head(fragments.treeDepth1$ms2[[1]])
+```
+
+### Thermo Fisher rawfile
+
+```{r}
+(rawfile <- rawfiles[20])
+```
+
+## STEP 1-4 
+
+```{r message=FALSE, warning=FALSE}
+if(file.exists(rawfile)){
+  S <- analyze(rawfile, fragments.treeDepth1)
+  summary.uvpd(S)
+  
+  library(knitr)
+  kable(head(S, 20))
+}
+```
+
+# Session info
+
+Here is the output of `sessionInfo()` on the system on which this
+document was compiled:
+
+```{r sessionInfo, echo=FALSE}
+sessionInfo()
+```
+
+# References
+
+

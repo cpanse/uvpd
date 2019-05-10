@@ -1,6 +1,7 @@
 #!/usr/bin/env Rscript
 
 # Christian Panse <cp@fgcz.ethz.ch>, 2019-03-26
+# Christian Panse <cp@fgcz.ethz.ch>, 2019-05-10
 
 
 
@@ -11,9 +12,25 @@ makeFragments <- function(){
     ThermoUVPD_feb2019 <- read_csv(file.path(system.file(package = 'uvpd'),
                                              "/extdata/ThermoUVPD_feb2019.csv"))
 
-    fragments.treeDepth1 <- lapply(ThermoUVPD_feb2019$SMILES, getFragments, treeDepth=1)
-    # fragments.treeDepth2 <- lapply(ThermoUVPD_feb2019$SMILES, getFragments, treeDepth=2)
-    save(fragments.treeDepth1, file="../inst/extdata/fragments.RData")  
+    idx <- order(ThermoUVPD_feb2019$MONOISOTOPIC_MASS_1, ThermoUVPD_feb2019$SMILES)
+    
+    
+    
+    fragments.treeDepth1 <- list(
+        SMILES = ThermoUVPD_feb2019$SMILES[idx],
+        formula = ThermoUVPD_feb2019$MOLECULAR_FORMULA[idx],
+        mass = ThermoUVPD_feb2019$MONOISOTOPIC_MASS_1[idx],
+        ms2 = lapply(ThermoUVPD_feb2019$SMILES[idx], getFragments, treeDepth=1)
+    )
+    
+    fragments.treeDepth2 <- list(
+        SMILES = ThermoUVPD_feb2019$SMILES[idx],
+        formula = ThermoUVPD_feb2019$MOLECULAR_FORMULA[idx],
+        mass = ThermoUVPD_feb2019$MONOISOTOPIC_MASS_1[idx],
+        ms2=lapply(ThermoUVPD_feb2019$SMILES, getFragments, treeDepth=2)
+    )
+   
+    save(fragments.treeDepth1,  fragments.treeDepth2,  file="fragments.RData", compression_level = 9)  
 }
 
 summary.analyze.uvpd <- function(S, group="Castell"){
@@ -54,7 +71,7 @@ extractMs2Feature <- function(){
     S.Castell <- lapply(rawfiles.Castell[2:7], FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007)
     
     rawfiles.DBPs <- rawfiles[grepl("DBPs", rawfiles)]
-    S.DBP <- lapply(rawfiles.DBPs[c(1, 3:6)], FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007)
+    S.DBP <- lapply(rawfiles.DBPs[c(1, 3:6)], FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007, eps.rt = 1)
     
     rawfiles.KWRneg <- rawfiles[grepl("(KWR|stds)", rawfiles) &  grepl("(neg)", rawfiles)]
     rawfiles.KWRpos <- rawfiles[grepl("(KWR|stds)", rawfiles) &  grepl("(pos)", rawfiles)]

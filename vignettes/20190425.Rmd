@@ -1,6 +1,6 @@
 
 ---
-title: "20190425"
+title: "20190425 Workflow"
 author: "AB/CP"
 output:
   html_document:
@@ -10,7 +10,7 @@ output:
     theme: united
 bibliography: uvpd.bib
 vignette: |
-  %\VignetteIndexEntry{Analyze - extract - match - aggregate}
+  %\VignetteIndexEntry{Workflow: extract - match - aggregate}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 

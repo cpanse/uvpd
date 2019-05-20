@@ -13,9 +13,7 @@ makeFragments <- function(){
                                              "/extdata/ThermoUVPD_feb2019.csv"))
 
     idx <- order(ThermoUVPD_feb2019$MONOISOTOPIC_MASS_1, ThermoUVPD_feb2019$SMILES)
-    
-    
-    
+
     fragments.treeDepth1 <- list(
         SMILES = ThermoUVPD_feb2019$SMILES[idx],
         formula = ThermoUVPD_feb2019$MOLECULAR_FORMULA[idx],

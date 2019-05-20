@@ -95,6 +95,11 @@ rawfile29 <- rawfiles[29]
 S24 <- analyze(rawfile24, fragments = fragments.treeDepth1)
 S29 <- analyze(rawfile29, fragments = fragments.treeDepth1)
 
+S24.log <- aggregate(intensity ~ ., data=S24,  FUN=function(x){log(x, 10)})
+S24.log$intensity.norm <- (S24.log$intensity - mean(S24.log$intensity ))/ sd(S24.log$intensity )
+
+S29.log <- aggregate(intensity ~ ., data=S29,  FUN=function(x){log(x, 10)})
+S29.log$intensity.norm <- (S29.log$intensity - mean(S29.log$intensity ))/ sd(S29.log$intensity )
 S <- rbind(S24, S29)
 
 # STATISTICS:

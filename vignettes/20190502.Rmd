@@ -1,6 +1,6 @@
 
 ---
-title: "20190425"
+title: "20190502"
 author: "AB/CP"
 output:
   html_document:
@@ -26,85 +26,62 @@ knitr::opts_chunk$set(echo = TRUE)
 ```{r}
 library(uvpd)
 
-load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
-
-rawfiles <- scan(file.path(system.file(package = 'uvpd'),
-                           "/extdata/rawfiles.txt"), what = character())
-rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
-
+load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+ls()
 ```
 
 
-# Algorithm
-
-## INPUT:
-
-- in-silico fragment ion spectra of a given set of SMILES ; precomputed by using [@rcdk], [@metFragR]
-
-- ThermoFisher raw file
-
-## STEP1: 
-
-- dermines APEX(MS1) of each molecule mass return rt for each given mass; [@rawDiag]
-
-## STEP2: 
-
-- extract MS2 at a given rt and precursor window 
-
-## STEP3: 
-
-- compute match between in-silico and MS2 fragment specs  [@protViz]
-
-## STEP4: 
-
-- aggregate (default \code{FUN=sum}) matches using
-- \code{intensity ~ mZ + type + SMILES + formula}.
- where mZ are the matched fragment ion mass, type is fragment type,e.g., MH1P.
-
-## OUTPUT: 
-
-- a \code{data.frame} object having the column names
-\code{c('mZ', 'type', 'SMILES', 'formula', 'intensity', 'rawfile',
-   'scanTypeFilter', 'SMILES0', 'formula0', 'mass', 'n'}.
-
-# Example
-
-## INPUT:
-
-### MS2 fragments computed out of the SMILES
+# Sanity checks
 ```{r}
-head(fragments.treeDepth1$SMILES)
-head(fragments.treeDepth1$mass)
-head(fragments.treeDepth1$ms2[[1]])
+sapply(uvpd.Castell, nrow)
+sapply(uvpd.DBP, nrow)
+uvpd.KWRneg <- uvpd.KWRneg[!sapply(uvpd.KWRneg, is.null)]
+sapply(uvpd.KWRneg, nrow)
+sapply(uvpd.KWRpos, nrow)
 ```
 
-### Thermo Fisher rawfile
+# Overview plots
 
-```{r}
-(rawfile <- rawfiles[20])
+## Castell
+```{r fig.retina=3, fig.height=12, fig.width=19}
+library(lattice)
+xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
+       data = do.call('rbind', uvpd.Castell),
+       groups = type,
+        main = "Castell",
+       type ='h')
 ```
 
-## STEP 1-4 
+## DBP
+```{r fig.retina=3, fig.height=12, fig.width=19}
+table(do.call('rbind', uvpd.DBP)$formula0)
 
-```{r message=FALSE, warning=FALSE}
-if(file.exists(rawfile)){
-  S <- analyze(rawfile, fragments.treeDepth1)
-  summary.uvpd(S)
-  
-  library(knitr)
-  kable(head(S, 20))
-}
+xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
+       data = do.call('rbind', uvpd.DBP),
+       groups = type,
+        main = "DBP",
+       type ='h')
 ```
 
-# Session info
+## KWR pos
 
-Here is the output of `sessionInfo()` on the system on which this
-document was compiled:
-
-```{r sessionInfo, echo=FALSE}
-sessionInfo()
+```{r fig.retina=3, fig.height=12, fig.width=19}
+library(lattice)
+xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
+       data = do.call('rbind', uvpd.KWRpos),
+       groups = type,
+        main = "KWR pos",
+       type ='h')
 ```
 
-# References
 
+## KWR neg
 
+```{r fig.retina=3, fig.height=12, fig.width=19}
+library(lattice)
+xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
+       data = do.call('rbind', uvpd.KWRneg),
+       groups = type,
+       main = "KWR nreg",
+       type ='h')
+```

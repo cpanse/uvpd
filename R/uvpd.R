@@ -374,19 +374,27 @@ matchFragment <- function(MS2Scans, fragments, plot=FALSE, errorCutOff = 0.001, 
 #' S24 <- analyze(rawfile24, fragments = fragments.treeDepth1)
 #' S29 <- analyze(rawfile29, fragments = fragments.treeDepth1)
 #' 
-#' S <- rbind(S24, S29)
+#' S24.log <- aggregate(intensity ~ ., data=S24,  FUN=function(x){log(x, 10)})
+#' S24.log$intensity.norm <- (S24.log$intensity - mean(S24.log$intensity ))/ sd(S24.log$intensity )
 #' 
+#' S29.log <- aggregate(intensity ~ ., data=S29,  FUN=function(x){log(x, 10)})
+#' S29.log$intensity.norm <- (S29.log$intensity - mean(S29.log$intensity ))/ sd(S29.log$intensity )
+#' 
+#' S <- rbind(S24, S29)
+#' S.log <- rbind(S24.log, S29.log)
+#' 
+#' boxplot(intensity.norm ~ rawfile, data=S.log )
 #' # STATISTICS:
 #' 
 #' # merge profile data
-#' SS <- aggregate(intensity ~ mZ + type + SMILES + formula + scan + nfragments + nMS2 + sumMS2intensities + rawfile + scanTypeFilter + SMILES0 + formula0 + mass + nScans, data = S, FUN=sum)
+#' SS.log <- aggregate(intensity ~ mZ + type + SMILES + formula + scan + nfragments + nMS2 + sumMS2intensities + rawfile + scanTypeFilter + SMILES0 + formula0 + mass + nScans, data = S.log, FUN=sum)
 #' 
 #' # sum intensities
-#' SSS<-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + nfragments + nMS2 + sumMS2intensities, data=SS, FUN=sum)
+#' SSS.log<-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + nfragments + nMS2 + sumMS2intensities, data=SS.log, FUN=sum)
 #' 
 #' library(lattice)
 #' 
-#' histogram(~intensity/sumMS2intensities | scanTypeFilter, data=SSS, type='count')
+#' histogram(~intensity/sumMS2intensities | scanTypeFilter, data=SSS.log, type='count')
 #' histogram(~intensity/nfragments | scanTypeFilter, data=SSS, type='count')
 #' }
 analyze <- function(rawfile, fragments, mZoffset = 1.007, itol = 0.001,
@@ -402,8 +410,8 @@ analyze <- function(rawfile, fragments, mZoffset = 1.007, itol = 0.001,
   XX <- lapply(scanTypes, function(st){
       uvpd:::.assignMatchedFragmentIons(X, scanTypeFilter = st,
                                  mZoffset=mZoffset,
-                                 eps.mZ = 0.05,
-                                 eps.rt = 0.5,
+                                 eps.mZ = eps.mZ,
+                                 eps.rt = eps.rt,
                                  errorCutOff=itol)})
   
   # does some list cosmetics

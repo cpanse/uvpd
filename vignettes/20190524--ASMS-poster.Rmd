@@ -54,7 +54,7 @@ do.isotopes(molecule)
 XIC <- readXICs(rawfile, mZ)
 ```
 
-```{r XIC, fig.retina=3, fig.path='./graphics/'}
+```{r ASMS_XIC, fig.retina=3, fig.path='./graphics/'}
 library(ggplot2)
 plot(XIC) + labs(x = "Retention Time [min]", y = "Intensity")
 ```
@@ -71,12 +71,12 @@ df.frags <- df.frags[!is.na(df.frags$mZ), ]
 ```
 
 ### Plot in-silico spec
-```{r in-silico-fragmentIons, fig.retina=3, fig.path='./graphics/'}
+```{r ASMS_in-silico-fragmentIons, fig.retina=3, fig.path='./graphics/'}
 plot(0,0, xlim=range(f.mZ<-unique(df.frags$mZ)), ylim=c(0,1), type = 'n', xlab = 'mZ', ylab=''); abline(v=df.frags$mZ, col=df.frags$type)
 ```
 
 ## Castell
-```{r Castell, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
+```{r ASMS_Castell, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
 
 library(uvpd)
 
@@ -89,6 +89,7 @@ xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
        groups = type,
        auto.key = TRUE,
        main = "Castell",
+       index.cond=list(1:10,c(1:3, 7,11,4,5,6,8,9,10,12,13)),
        type ='h')
 ```
 

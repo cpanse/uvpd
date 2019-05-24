@@ -11,6 +11,9 @@ bibliography: uvpd.bib
 ---
 
 
+# Input
+
+## in-silico
 
 ```{r}
 library(metfRag)
@@ -25,8 +28,7 @@ length(fragments)
 
 ```
 
-- Input: 
- 
+## Mass Spec Data
  
 ```{r}
 library(uvpd)
@@ -38,30 +40,38 @@ library(rawDiag)
 
 
 #rawfile <- "/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190214/CastellonStds/CastellonStds_pos_UVPD_400_500.raw"
+rawfile <- "/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_100_150_mz50.raw"
 ```
 
 
-## Input
 
 
-### Get XIC
+# XIC
 
 ```{r}
 do.isotopes(molecule)
 (mZ <- get.exact.mass(molecule) + 1.007)
 
 
-XIC <- readXICs(rawfile, mZ)
+XIC <- readXICs(rawfile, mZ, tol=30)
 ```
 
 ```{r ASMS_XIC, fig.retina=3, fig.path='./graphics/'}
-library(ggplot2)
-plot(XIC) + labs(x = "Retention Time [min]", y = "Intensity")
+#library(ggplot2)
+#plot(XIC) + 
+#  labs(x = "Retention Time [min]", y = "Intensity") +
+#  labs(subtitle = smiles)
+library(lattice)
+xyplot(intensities ~ times, data=XIC[[1]] ,
+       type='b',
+       xlab='Retention Time [min]',
+       lwd=2,
+       ylab='Intensity',
+       sub=paste("XIC of ", smiles))
 ```
 
 
-## getFragments
-
+# in-silico fragment ions
 example call
 
 ```{r computeIn-silicoFragments}
@@ -70,12 +80,21 @@ df.frags <- df.frags[!is.na(df.frags$mZ), ]
 
 ```
 
-### Plot in-silico spec
+## Plot in-silico spec
 ```{r ASMS_in-silico-fragmentIons, fig.retina=3, fig.path='./graphics/'}
-plot(0,0, xlim=range(f.mZ<-unique(df.frags$mZ)), ylim=c(0,1), type = 'n', xlab = 'mZ', ylab=''); abline(v=df.frags$mZ, col=df.frags$type)
+#plot(0,0, xlim=range(f.mZ<-unique(df.frags$mZ)), ylim=c(0,1), type = 'n', xlab = 'mZ', ylab=''); abline(v=df.frags$mZ, col=df.frags$type)
+library(lattice)
+xyplot(rep(1, nrow(df.frags)) ~ mZ,
+       data=df.frags,
+       group=type,
+       type='h',
+       ylim=c(0,1),
+       auto.key = TRUE,
+       sub=paste("in-silico fragment ions of ", smiles),
+       ylab='Intensity')
 ```
 
-## Castell
+# Castell match
 ```{r ASMS_Castell, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
 
 library(uvpd)
@@ -83,7 +102,8 @@ library(uvpd)
 load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
 
 
-library(lattice)
+
+
 xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
        data = do.call('rbind', uvpd.Castell),
        groups = type,

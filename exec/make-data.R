@@ -86,8 +86,8 @@ extractMs2Feature <- function(){
     load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
     
     rawfiles <- scan(file.path(system.file(package = 'uvpd'),
-                               "/extdata/rawfiles_all.txt"), what = character())
-    unlist(lapply(pp, function(p){idx <- grep(p, rawfiles); rawfiles[idx]}))
+                               "/extdata/rawfiles.txt"), what = character())
+    rawfiles <- unlist(lapply(pp, function(p){idx <- grep(p, rawfiles); rawfiles[idx]}))
     rawfiles <- rawfiles[grepl("Castell|(KWR|stds)|DBPs", rawfiles)]
     rawfiles <- rawfiles[!grepl("AcX|blank|Blank", rawfiles)]
     
@@ -97,14 +97,14 @@ extractMs2Feature <- function(){
     #' 
 
     rawfiles.Castell <- rawfiles[grepl("Castell", rawfiles)]
-    S.Castell <- lapply(rawfiles.Castell[2:7], FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007)
+    S.Castell <- lapply(rawfiles.Castell, FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007)
     
     rawfiles.DBPs <- rawfiles[grepl("DBPs", rawfiles)]
-    S.DBP <- lapply(rawfiles.DBPs[c(1, 3:6)], FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007, eps.rt = 1)
+    S.DBP <- lapply(rawfiles.DBPs, FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007, eps.rt = 1)
     
     rawfiles.KWRneg <- rawfiles[grepl("(KWR|stds)", rawfiles) &  grepl("(neg)", rawfiles)]
     rawfiles.KWRpos <- rawfiles[grepl("(KWR|stds)", rawfiles) &  grepl("(pos)", rawfiles)]
-    S.KWRpos <- lapply(rawfiles.KWRpos[c(1:5, 8:16)], FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007)
+    S.KWRpos <- lapply(rawfiles.KWRpos, FUN=analyze, fragments = fragments.treeDepth1, mZoffset = +1.007)
     
     S.KWRneg <- lapply(rawfiles.KWRneg[c(1:16)], FUN=function(x){
         try({rv <- analyze(x, fragments = fragments.treeDepth1, mZoffset = -1.007); return(rv)}); NULL})

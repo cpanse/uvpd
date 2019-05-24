@@ -1,0 +1,95 @@
+---
+title: "ASMS 2019 poster figures"
+author: "AB/CP"
+output:
+  html_document:
+    toc_float: true
+    toc: true
+    number_sections: true
+    theme: united
+bibliography: uvpd.bib
+---
+
+
+
+```{r}
+library(metfRag)
+
+smiles <- "CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1"
+molecule<-parse.smiles(smiles)[[1]]
+
+#calculate the fragments
+fragments <- frag.generateFragments(molecule, 1)
+
+length(fragments)
+
+```
+
+- Input: 
+ 
+ 
+```{r}
+library(uvpd)
+library(rawDiag)
+#rawfile <- "/Users/cp/data/stds_pos_neg_MS_highconc_UVPD_50_300.raw"
+(rawfile <- file.path(Sys.getenv('HOME'), "Downloads",
+  "stds_pos_neg_MS_highconc_UVPD_50_300.raw"))
+#rawfile <- "/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190214/CastellonStds/CastellonStds_pos_HCD_20_35_60.raw"
+
+
+#rawfile <- "/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190214/CastellonStds/CastellonStds_pos_UVPD_400_500.raw"
+```
+
+
+## Input
+
+
+### Get XIC
+
+```{r}
+do.isotopes(molecule)
+(mZ <- get.exact.mass(molecule) + 1.007)
+
+
+XIC <- readXICs(rawfile, mZ)
+```
+
+```{r XIC, fig.retina=3, fig.path='./graphics/'}
+library(ggplot2)
+plot(XIC) + labs(x = "Retention Time [min]", y = "Intensity")
+```
+
+
+## getFragments
+
+example call
+
+```{r computeIn-silicoFragments}
+df.frags <- getFragments("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", treeDepth = 1) 
+df.frags <- df.frags[!is.na(df.frags$mZ), ]
+
+```
+
+### Plot in-silico spec
+```{r in-silico-fragmentIons, fig.retina=3, fig.path='./graphics/'}
+plot(0,0, xlim=range(f.mZ<-unique(df.frags$mZ)), ylim=c(0,1), type = 'n', xlab = 'mZ', ylab=''); abline(v=df.frags$mZ, col=df.frags$type)
+```
+
+## Castell
+```{r Castell, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
+
+library(uvpd)
+
+load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+
+
+library(lattice)
+xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
+       data = do.call('rbind', uvpd.Castell),
+       groups = type,
+       auto.key = TRUE,
+       main = "Castell",
+       type ='h')
+```
+
+

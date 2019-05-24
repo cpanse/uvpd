@@ -50,13 +50,44 @@ summary.analyze.uvpd <- function(S, group="Castell"){
     
 }
 
+pp <- c('stds_pos_neg_MS_highconc_HCD_mz100-800',
+        'stds_pos_neg_MS_highconc_UVPD_100_150_mz50',
+        'stds_pos_neg_MS_highconc_UVPD_200_250_mz50',
+        'stds_pos_neg_MS_highconc_UVPD_50_300_mz50',
+        'stds_pos_neg_MS_highconc_UVPD_400_500_mz50',
+        'stds_pos_neg_MS_highconc_UVPD_25_800_mz50',
+        'DBP_neg_UVPD_25_800',
+        'DBP_neg_UVPD_50_300',
+        'DBP_neg_UVPD_100_150',
+        'DBP_neg_UVPD_200_250',
+        'DBP_neg_UVPD_400_500',
+        'DBP_neg_HCD_20_35_60',
+        'CastellonStds_pos_UVPD_25_800',
+        'CastellonStds_pos_UVPD_50_300',
+        'CastellonStds_pos_UVPD_100_150',
+        'CastellonStds_pos_UVPD_200_250',
+        'CastellonStds_pos_UVPD_400_500',
+        'CastellonStds_pos_HCD_20_35_60',
+        'KWRstds_UVPD_25_800_met1',
+        'KWRstds_UVPD_25_800_met2',
+        'KWRstds_UVPD_50_300_met1',
+        'KWRstds_UVPD_50_300_met2',
+        'KWRstds_UVPD_100_150_met1',
+        'KWRstds_UVPD_100_150_met2',
+        'KWRstds_UVPD_200_250_met1',
+        'KWRstds_UVPD_200_250_met2',
+        'KWRstds_UVPD_400_500_met1',
+        'KWRstds_UVPD_400_500_met2',
+        'KWRstds_HCD_20_35_60_met1')
+
+
 extractMs2Feature <- function(){
     library(uvpd)
     load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
     
     rawfiles <- scan(file.path(system.file(package = 'uvpd'),
-                               "/extdata/rawfiles.txt"), what = character())
-    
+                               "/extdata/rawfiles_all.txt"), what = character())
+    unlist(lapply(pp, function(p){idx <- grep(p, rawfiles); rawfiles[idx]}))
     rawfiles <- rawfiles[grepl("Castell|(KWR|stds)|DBPs", rawfiles)]
     rawfiles <- rawfiles[!grepl("AcX|blank|Blank", rawfiles)]
     
@@ -83,5 +114,6 @@ extractMs2Feature <- function(){
     uvpd.DBP <- S.DBP
     uvpd.KWRpos <- S.KWRpos
     uvpd.KWRneg<-S.KWRneg
-    save(uvpd.Castell, uvpd.DBP, uvpd.KWRpos,uvpd.KWRneg , file="../inst/extdata/ms2assignments.RData")  
+    save(uvpd.Castell, uvpd.DBP, uvpd.KWRpos,uvpd.KWRneg, 
+         file="../inst/extdata/ms2assignments.RData")  
 }

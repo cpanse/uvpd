@@ -30,8 +30,33 @@ load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RDat
 ls()
 ```
 
+```{r}
+library(ggplot2)
+sanityCheckXIC <- function(S, mZoffset=1.007){
+  lapply(S, function(x){
+    XICs <- readXICs(rawfile = unique(x$rawfile), masses = unique(x$mass) + mZoffset, tol = 30)
+    plot.XICs(XICs) + labs(subtitle = basename(unique(x$rawfile)))
+  })}
+```
+
+```{r}
+sanityCheckXIC(uvpd.DBP, mZoffset=1.007)
+```
+
+```{r}
+sanityCheckXIC(uvpd.Castell, mZoffset=1.007)
+```
+
+```{r}
+sanityCheckXIC(uvpd.KWRpos, mZoffset=1.007)
+```
+
+```{r eval=FALSE}
+sanityCheckXIC(uvpd.KWRneg, mZoffset = -1.007)
+```
 
 # Sanity checks
+
 ```{r}
 sapply(uvpd.Castell, nrow)
 sapply(uvpd.DBP, nrow)

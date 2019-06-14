@@ -1,0 +1,218 @@
+---
+title: "ASMS 2019 poster figures"
+author: "AB/CP"
+output:
+  html_document:
+    toc_float: true
+    toc: true
+    number_sections: true
+    theme: united
+bibliography: uvpd.bib
+---
+
+
+# Input
+
+
+
+## Castell match
+```{r ASMS_Castell_load}
+
+library(uvpd)
+
+load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+Castell <- do.call('rbind', uvpd.Castell)
+   
+```
+
+## Aggregate profile data
+
+```{r}
+SS <- aggregate(intensity ~  mZ * type * SMILES * formula  * nfragments * nMS2 * sumMS2intensities * rawfile * scanTypeFilter * SMILES0 * formula0 * mass * nScans , data=Castell, FUN=max)
+```
+
+
+```{r ASMS_Castell_agg, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
+library(lattice)
+xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
+       data = SS,
+       groups = type,
+       auto.key = TRUE,
+       main = "Castell",
+       index.cond=list(1:10,c(1:3, 7,11,4,5,6,8,9,10,12,13)),
+       type ='h')
+```
+
+
+# Statistics
+
+## Number of Scans
+
+```{r}
+S.nScans <- aggregate(scan~  formula0 * scanTypeFilter, FUN=length, data=aggregate(intensity ~ scan * formula0 * scanTypeFilter, data = Castell, FUN=length))
+```
+
+```{r dotplot-nScans, fig.retina=3, fig.height=21, fig.width=6, fig.path='./graphics/'}
+dotplot(formula0 ~ scan|scanTypeFilter, data = S.nScans, layout=c(1,13))
+```
+
+
+```{r}
+bwplot(scanTypeFilter ~ scan , data = S.nScans)
+```
+
+## `intensity ~  type * scanTypeFilter`
+```{r}
+aggregate(intensity ~  type * scanTypeFilter, data=SS, FUN=length)
+```
+
+## `intensity ~  type * formula0 * mass * nScans , data=SS, FUN=length`
+```{r}
+res.sum <- aggregate(intensity ~ mass *  formula0 *  scanTypeFilter , data=SS, FUN=sum)
+res.sum[order(res.sum$formula0, res.sum$intensity),]
+
+res.length <- aggregate(intensity ~ mass *  formula0 *  scanTypeFilter , data=SS, FUN=length)
+res.length[order(res.length$formula0, res.length$intensity),]
+```
+
+# Scoring
+
+
+
+```{r}
+histogram(~intensity | grepl("hcd", scanTypeFilter), data=res.length, layout=c(1,2))
+```
+
+```{r}
+histogram(~intensity | grepl("hcd", scanTypeFilter), data=res.sum, layout=c(1,2))
+```
+
+
+```{r histlength, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
+histogram(~intensity | formula0 * grepl("hcd", scanTypeFilter) , data=res.length)
+```
+
+```{r histsum, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
+histogram(~intensity | formula0 * grepl("hcd", scanTypeFilter) , data=res.sum)
+```
+
+
+## in-silico
+```{r}
+load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+```
+
+```{r nInSilico}
+nInsilicoFragmentIons1 <- data.frame(formula0=fragments.treeDepth1$formula,
+                                     nInsilicoFragmentIons=sapply(fragments.treeDepth1$ms2, nrow))
+
+nInsilicoFragmentIons2 <- data.frame(formula0=fragments.treeDepth2$formula,
+                                     nInsilicoFragmentIons=sapply(fragments.treeDepth2$ms2, nrow))
+
+plot(nInsilicoFragmentIons1$nInsilicoFragmentIons, nInsilicoFragmentIons2$nInsilicoFragmentIons, log='xy', asp = 1)
+```
+
+
+```{r}
+M.sum <- merge(nInsilicoFragmentIons1, res.sum, by.x = 'formula0', by.y = 'formula0')
+M.length <- merge(nInsilicoFragmentIons1, res.length, by.x = 'formula0', by.y = 'formula0')
+```
+
+```{r}
+histogram(~log(intensity)/nInsilicoFragmentIons | grepl("hcd", scanTypeFilter), data=M.sum, layout=c(1,2))
+histogram(~intensity/nInsilicoFragmentIons | grepl("hcd", scanTypeFilter), data=M.length, layout=c(1,2))
+```
+
+
+# Similarity 
+
+```{r eval=TRUE}
+library(OrgMassSpecR)
+
+P <- expand.grid(scanTypeFilter=(unique(SS$scanTypeFilter)), formula0=unique(SS$formula0))
+```
+
+
+```{r}
+sim <- function(x, y, resolution=10){
+    if (is.null(x) | is.null(y)) {return (NA)}
+    n <- resolution * round(max(x$mZ, y$mZ))
+    if (n > 0){
+        
+        
+        x0 <- rep(0, n)
+        y0 <- rep(0, n)
+        x0[resolution * round(x$mZ)] <- x$intensity
+        y0[resolution * round(y$mZ)] <- y$intensity
+        
+        return (x0 %*% y0 / sqrt(sum(x0^2) * sum(y0^2)))
+    }
+    NULL
+}
+```
+
+```{r}
+filter0 <- SS$scanTypeFilter == "@uvpd25.00" & SS$formula0 == "C22H25NO2"
+filter1 <- SS$scanTypeFilter == "@uvpd250.00" & SS$formula0 == "C22H25NO2"
+
+spec0 <- data.frame(mZ = SS[filter0, 'mZ'], intensity = SS[filter0, 'intensity'])
+spec1 <- data.frame(mZ = SS[filter1, 'mZ'], intensity = SS[filter1, 'intensity'])
+
+sim(spec0, spec1)
+sim(spec0, spec0)
+sim(spec1, spec1)
+
+
+SpectrumSimilarity(spec0, spec1,output.list =TRUE )$similarity.score
+SpectrumSimilarity(spec0, spec0,output.list =TRUE )$similarity.score
+SpectrumSimilarity(spec1, spec1,output.list =TRUE )$similarity.score
+```
+
+```{r}
+
+run <- function(f){
+    P <- as.data.frame(expand.grid(scanTypeFilter=as.character(unique(SS$scanTypeFilter)), formula0=f))
+    
+    extractPeaklist <- function(SS, x){
+        f0 <- SS$scanTypeFilter == x$scanTypeFilte
+        f1 <- SS$formula0 == x$formula0
+        
+        idx <- which(f0 & f1)
+        
+        if (length(idx) > 0){
+            return(data.frame(mZ = SS$mZ[idx], intensity = SS$intensity[idx]))
+        }
+        NULL
+    }
+    
+    PP <- expand.grid(x = 1:nrow(P), y = 1:nrow(P))
+    n<-nrow(PP)
+    #n<-10
+    rv <- lapply(1:n, function(i){
+        data.frame(
+            x = PP$x[i],
+            y = PP$y[i],
+            formula0 = P[PP$x[i],],
+            formula1 = P[PP$y[i],],
+            score=sim(extractPeaklist(SS, P[PP$x[i],]), extractPeaklist(SS, P[PP$y[i],]), resolution = 10))
+    })
+    
+    rv <- do.call('rbind', rv)
+    rv
+}
+rv0 <- do.call('rbind', lapply(as.character(unique(SS$formula0)), run))
+```
+
+
+```{r dist, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
+
+library(lattice)
+lattice.options(default.theme = standard.theme(color = FALSE))
+levelplot(score ~ formula0.scanTypeFilter * formula1.scanTypeFilter | formula1.formula0, data=rv0, scales = list(x = list(rot = 45)))
+```
+
+
+
+
+
+

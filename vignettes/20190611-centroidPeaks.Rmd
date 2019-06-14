@@ -70,6 +70,7 @@ estCentroidPeaks <- function(S, eps = 1 / 200){
 ```
 
 ```{r run}
+xxx <- function(x){
   rawfile <- x$rawfile[[1]]
   scans <- unique(x$scan)
   
@@ -86,11 +87,30 @@ estCentroidPeaks <- function(S, eps = 1 / 200){
   
   df
   
-})
+}
 ```
 
 
 ```{r}
+library(uvpd)
+load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+rv <- lapply(uvpd.Castell, xxx)
+
 S <- (do.call('rbind', rv))
 plot(S$nMS2, S$npeaks.centroid, pch=16, col=as.factor(S$rawfile), cex=1.4)
+```
+
+
+## Summary
+
+```{r}
+Smatch <- do.call('rbind', lapply(uvpd.Castell, function(x){aggregate(intensity ~ SMILES0 * rawfile * scan, data=x, FUN=length)}))
+
+names(Smatch) <- c("SMILES0",   "rawfile",   "scan",      "nPSM")
+
+uvpd.Castell.summary <- merge(S, Smatch)
+
+table(uvpd.Castell.summary$nMS2 > uvpd.Castell.summary$npeaks.centroid)
+table(uvpd.Castell.summary$nPSM > uvpd.Castell.summary$npeaks.centroid)
+
 ```

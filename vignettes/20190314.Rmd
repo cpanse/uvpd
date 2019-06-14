@@ -63,7 +63,7 @@ RAW <- read.raw(rawfile, rawDiag = TRUE)
 
 ```{r}
 mz <- 296.116
-
+stds_pos_neg_MS_highconc_UVPD_100_150_mz50
 # alternative
 do.isotopes(molecule)
 get.exact.mass(molecule) + 1.007

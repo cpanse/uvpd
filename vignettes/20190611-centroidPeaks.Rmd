@@ -1,0 +1,96 @@
+---
+title: "Vignette Title"
+author: "Vignette Author"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Load
+
+```{r}
+library(uvpd)
+load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+
+# load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+#
+# rawfiles <- scan(file.path(system.file(package = 'uvpd'),
+#                            "/extdata/rawfiles.txt"), what = character())
+# rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+
+
+```
+
+```{r}
+#R
+
+# estimate the number of centroid peaks
+estCentroidPeaks <- function(S, eps = 1 / 200){
+
+        idx <- (S$intensity > 0)
+        S$mZ <- S$mZ[idx]
+        S$intensity <- S$intensity[idx]
+
+        n <- length(S$mZ)
+        cluster <- rep(0, n)
+        counter <- 1
+        cluster[1] <- counter
+        cmZ <- S$mZ[1]
+
+        for (i in 2:n){
+
+                intensity.max <- max(S$intensity)
+
+                d <- abs(cmZ - S$mZ[i])
+                #print(d)
+
+                if (d < eps & S$intensity[i] > 0){
+                } else {
+                        counter <- counter + 1
+                }
+                cluster[i] <- counter
+                cmZ <- S$mZ[i]
+        }
+         #idx <- (cluster %in% which(table(cluster) > 3))
+        S$mZ <- aggregate(S$mZ ~ cluster, FUN=median)[,2]
+        S$sumintensity <- aggregate(S$intensity ~ cluster, FUN=sum)[,2]
+        S$intensity <- aggregate(S$intensity ~ cluster, FUN=max)[,2]
+        S
+}
+```
+
+```{r run}
+  rawfile <- x$rawfile[[1]]
+  scans <- unique(x$scan)
+  
+  df <- unique(data.frame(scan=x$scan, nMS2=x$nMS2))
+  
+  S.profile <- readScans(rawfile, df$scan)
+  
+  S.centroid <- lapply(S.profile, estCentroidPeaks, eps=1/1000)
+  
+  df$npeaks.profile <- sapply(S.profile, function(y){length(y$mZ)})
+  
+  df$npeaks.centroid <- sapply(S.centroid, function(y){length(y$mZ)})
+  df$rawfile <- rawfile
+  
+  df
+  
+})
+```
+
+
+```{r}
+S <- (do.call('rbind', rv))
+plot(S$nMS2, S$npeaks.centroid, pch=16, col=as.factor(S$rawfile), cex=1.4)
+```

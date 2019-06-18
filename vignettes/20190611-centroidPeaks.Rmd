@@ -69,6 +69,36 @@ estCentroidPeaks <- function(S, eps = 1 / 200){
 }
 ```
 
+```{r}
+baseline <- function(x, debug=FALSE){
+    max.mZ <- max(x$mZ)
+    n <- length(mZrange <- seq(0, max.mZ, by = 100))
+    
+    rv <- lapply(2:n, function(i){
+        idx <- which(mZrange[i-1] <= x$mZ & x$mZ < mZrange[i])
+        if(length(idx) > 0){
+            mZ <- x$mZ[idx]
+            intensity <- x$intensity[idx]
+            
+            fidx <- which(intensity > 0.01 * max(intensity))
+            
+            if (debug){
+                
+            
+            plot(mZ, intensity, type='h')
+            points(mZ[fidx], intensity[fidx], col='red')
+            }
+            data.frame(mZ = mZ[fidx], intensity = intensity[fidx])
+        }
+    })
+    rv <- do.call('rbind', rv)
+    
+    x$mZ <- rv$mZ
+    x$intensity <- rv$intensity
+    x
+}
+```
+
 ```{r run}
 xxx <- function(x){
   rawfile <- x$rawfile[1]
@@ -78,7 +108,8 @@ xxx <- function(x){
   
   S.profile <- readScans(rawfile, df$scan)
   
-  S.centroid <- lapply(S.profile, estCentroidPeaks, eps=1/1000)
+  S.centroid <- lapply(S.profile, estCentroidPeaks, eps = 1/1000)
+  S.centroid <- lapply(S.centroid, baseline)
   
   df$npeaks.profile <- sapply(S.profile, function(y){length(y$mZ)})
   
@@ -106,13 +137,12 @@ plot(S$nMS2, S$npeaks.centroid, pch=16, col=as.factor(S$rawfile), cex=1.4)
 ```{r}
 Smatch <- do.call('rbind', lapply(uvpd.Castell, function(x){aggregate(intensity ~ SMILES0 * rawfile * scanTypeFilter*  scan, data=x, FUN=length)}))
 
-names(Smatch) <- c("SMILES0",   "rawfile", "scanTypeFilter",  "scan",      "nPSM")
+names(Smatch) <- c("SMILES0",   "rawfile", "scanTypeFilter",  "scan",  "nPSM")
 
 uvpd.Castell.summary <- merge(S, Smatch)
 
 table(uvpd.Castell.summary$nMS2 > uvpd.Castell.summary$npeaks.centroid)
 table(uvpd.Castell.summary$nPSM > uvpd.Castell.summary$npeaks.centroid)
-
 ```
 
 
@@ -141,6 +171,14 @@ boxplot(nPSM / npeaks.centroid ~ scanTypeFilter, data=rv)
  dotplot(nPSM / npeaks.centroid ~scanTypeFilter, data=rv, group=rv$`Cluster number`, scales = list(x = list(rot = 45)), auto.key = list(space = "right"))
 
 dotplot(nPSM / npeaks.centroid ~ scanTypeFilter | SMILES0,
+        data=rv,
+        group=rv$`Cluster number`,
+        scales = list(x = list(rot = 45)),
+        auto.key = list(space = "right"),
+        pch=16,
+        layout=c(3, 4))
+
+dotplot(nPSM / nMS2 ~ scanTypeFilter | SMILES0,
         data=rv,
         group=rv$`Cluster number`,
         scales = list(x = list(rot = 45)),

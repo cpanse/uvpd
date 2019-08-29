@@ -21,8 +21,37 @@ bibliography: uvpd.bib
 library(uvpd)
 
 load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+# load("../inst/extdata/extractedMs2Feature.RData")
 Castell <- do.call('rbind', uvpd.Castell)
-   
+
+Castell$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell$scanTypeFilter)
+
+Castell$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell$scanTypeFilter)
+```
+
+
+some scoring
+
+```{r}
+ bwplot( ( nfragments / nMS2 ) ~ scanTypeFilter | formula0 , data =  Castell, scales = list(x = list(rot = 45)))
+
+ bwplot( (nfragments/ nScans ) ~ scanTypeFilter | formula0 , data =  Castell, scales = list(x = list(rot = 45)))
+
+```
+
+score: fragments matched / theoretically possible using Castell
+
+```{r fig.retina=3}
+S <- aggregate(intensity ~ nfragments * scanTypeFilter * formula0 * formula,
+               FUN = max, data = Castell)
+
+SS <- aggregate(intensity ~ scanTypeFilter * formula0 * nfragments, FUN='length', data=S)
+
+dotplot(100 *intensity / nfragments ~ scanTypeFilter | formula0,
+        data=SS,
+        scales = list(x = list(rot = 45)),
+        ylab='fragments matched / theoretically possible [in %]')
+
 ```
 
 ## Aggregate profile data
@@ -64,15 +93,18 @@ sanity check
 dim(Castell_[Castell_$formula0=='C16H12FN3O3' & Castell_$scanTypeFilter=="@uvpd100.00", ])
 
 
-Castell_sum <- aggregate(intensity ~formula0 * scanTypeFilter, FUN=sum,
+Castell_sum <- aggregate(intensity ~ formula0 * scanTypeFilter, FUN=sum,
                          data=Castell_ )
 
+Castell_sum_ion <- aggregate(intensity ~ formula0 * formula* scanTypeFilter, FUN=max,
+                         data=Castell_ )
 
 Castell_length <- aggregate(intensity ~formula0 * scanTypeFilter, FUN=length,
                          data=Castell_ )
 
 
 Castell_sum$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell_sum$scanTypeFilter)
+
 Castell_sum$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell_sum$scanTypeFilter)
 
 dotplot(log(intensity, 10) ~ scanTypeFilter | formula0,
@@ -80,6 +112,31 @@ dotplot(log(intensity, 10) ~ scanTypeFilter | formula0,
         group = grepl("uvpd", Castell_sum$scanTypeFilter),
         scales = list(x = list(rot = 45)))
 
+barchart(log(intensity, 10) ~ scanTypeFilter | formula0,
+        data=Castell_sum_ion,
+        #group = formula,
+        #group = grepl("uvpd", Castell_sum$scanTypeFilter),
+        scales = list(x = list(rot = 45)))
+
+library(ggplot2)
+
+Castell_sum_ion$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell_sum_ion$scanTypeFilter)
+
+Castell_sum_ion$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell_sum_ion$scanTypeFilter)
+
+
+pdf("Castell_StackedBarPlots.pdf")
+lapply(unique(Castell_sum_ion$formula0), function(f){
+    df <- Castell_sum_ion[Castell_sum_ion$formula0 == f,]
+    gp <- ggplot(data = df, aes(x=scanTypeFilter,
+                                y=log(intensity,10),  fill=formula)) +
+       geom_bar(stat="identity") +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        facet_wrap(~ formula0)
+    #gp + facet_wrap(~ grepl("uvpd", df$scanTypeFilter))
+   #gp + facet_wrap(~ grepl("uvpd", Castell_sum$scanTypeFilter))
+})
+dev.off()
 
 Castell_length$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell_length$scanTypeFilter)
 Castell_length$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell_length$scanTypeFilter)

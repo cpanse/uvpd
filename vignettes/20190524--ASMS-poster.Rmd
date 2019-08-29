@@ -77,7 +77,6 @@ example call
 ```{r computeIn-silicoFragments}
 df.frags <- getFragments("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", treeDepth = 1) 
 df.frags <- df.frags[!is.na(df.frags$mZ), ]
-
 ```
 
 ## Plot in-silico spec
@@ -100,9 +99,6 @@ xyplot(rep(1, nrow(df.frags)) ~ mZ,
 library(uvpd)
 
 load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
-
-
-
 
 xyplot(log(intensity, 10) ~ mZ |  formula0 * scanTypeFilter,
        data = do.call('rbind', uvpd.Castell),

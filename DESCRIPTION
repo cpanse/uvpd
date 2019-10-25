@@ -6,15 +6,15 @@ Maintainer: Christian Panse<cp@fgcz.ethz.ch>
 Version: 0.0.1
 Description: provides ... 
 Depends:
-    metfRag (>= 2.4.2),
-    protViz (>= 0.4.0),
+    metfRag (>= 2.4),
+    protViz (>= 0.4),
     rawDiag (>= 0.0.20),
-    rcdk (>= 3.4.7.1)
-Suggest: knitr, 
+    rcdk (>= 3.4)
+Suggest: knitr,
     rmarkdown,
     readr,
     roxygen2,
-    testthat,
+    testthat
 License: GPL
 LazyData: TRUE
 Collate:

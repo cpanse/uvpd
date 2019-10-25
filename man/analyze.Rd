@@ -100,19 +100,22 @@ S24.log$intensity.norm <- (S24.log$intensity - mean(S24.log$intensity ))/ sd(S24
 
 S29.log <- aggregate(intensity ~ ., data=S29,  FUN=function(x){log(x, 10)})
 S29.log$intensity.norm <- (S29.log$intensity - mean(S29.log$intensity ))/ sd(S29.log$intensity )
-S <- rbind(S24, S29)
 
+S <- rbind(S24, S29)
+S.log <- rbind(S24.log, S29.log)
+
+boxplot(intensity.norm ~ rawfile, data=S.log )
 # STATISTICS:
 
 # merge profile data
-SS <- aggregate(intensity ~ mZ + type + SMILES + formula + scan + nfragments + nMS2 + sumMS2intensities + rawfile + scanTypeFilter + SMILES0 + formula0 + mass + nScans, data = S, FUN=sum)
+SS.log <- aggregate(intensity ~ mZ + type + SMILES + formula + scan + nfragments + nMS2 + sumMS2intensities + rawfile + scanTypeFilter + SMILES0 + formula0 + mass + nScans, data = S.log, FUN=sum)
 
 # sum intensities
-SSS<-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + nfragments + nMS2 + sumMS2intensities, data=SS, FUN=sum)
+SSS.log<-aggregate(intensity ~ rawfile + formula0 + scanTypeFilter + scan + nfragments + nMS2 + sumMS2intensities, data=SS.log, FUN=sum)
 
 library(lattice)
 
-histogram(~intensity/sumMS2intensities | scanTypeFilter, data=SSS, type='count')
+histogram(~intensity/sumMS2intensities | scanTypeFilter, data=SSS.log, type='count')
 histogram(~intensity/nfragments | scanTypeFilter, data=SSS, type='count')
 }
 }

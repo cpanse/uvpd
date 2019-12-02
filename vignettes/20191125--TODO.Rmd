@@ -1,6 +1,208 @@
+---
+title: "2019-11-25 XIC/TIC"
+author: "AB/CP"
+output:
+  html_document:
+    toc_float: true
+    toc: true
+    number_sections: true
+    theme: united
+bibliography: uvpd.bib
+---
+
 UVPD p2722 FGCZ 2019-11-24, AB,CP
 
-1.
+
+# XIC/TIC proof-of-concept
+
+## positiv mode example
+
+```{r message=FALSE}
+library(uvpd)
+library(metfRag)
+library(rawDiag)
+
+#load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+
+#rawfiles <- scan(file.path(system.file(package = 'uvpd'),
+#                           "/extdata/rawfiles.txt"), what = character())
+#rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
+(rawfile <- file.path(Sys.getenv('HOME'), "Downloads",
+  "stds_pos_neg_MS_highconc_UVPD_50_300.raw"))
+
+
+smiles <- "CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1"
+molecule<-parse.smiles(smiles)[[1]]
+do.isotopes(molecule)
+
+# determine mass of protonated molecule
+(mZ <- get.exact.mass(molecule) + c(1.007))
+
+
+# extract ion chromatogram
+XIC <- readXICs(rawfile, mZ, tol=10)
+plot(XIC)
+
+S <- read.raw(rawfile)
+idxMs2 <- S$MSOrder=="Ms2"
+idx <- abs(S[idxMs2, ]$PrecursorMass - mZ) < 0.1
+
+if(sum(idx)>0){
+    plot(S[idxMs2[idx], c('StartTime', 'TIC')])
+
+    abline(v = (XIC[[1]]$times[max(XIC[[1]]$intensities) == XIC[[1]]$intensities]), col='red')
+}else{
+    plot(0,0); text(0,0,"no data found", cex=4)
+}
+```
+
+## negativ mode example
+
+
+```{r}
+# determine mass of protonated molecule
+(mZ <- get.exact.mass(molecule) + c(-1.007))
+
+
+# extract ion chromatogram
+XIC <- readXICs(rawfile, mZ, tol=10)
+plot(XIC)
+
+
+idxMs2 <- S$MSOrder=="Ms2"
+idx <- abs(S[idxMs2, ]$PrecursorMass - mZ) < 0.1
+
+if(sum(idx)>0){
+    plot(S[idxMs2[idx], c('StartTime', 'TIC')])
+
+    abline(v = (XIC[[1]]$times[max(XIC[[1]]$intensities) == XIC[[1]]$intensities]), col='red')
+}else{
+    plot(0,0); text(0,0,"no data found", cex=4)
+}
+```
+
+
+# for all
+
+```{r}
+library(readr)
+library(uvpd)
+f <- file.path(system.file(package = 'uvpd'), "/extdata/ThermoUVPD_feb2019.csv")
+ThermoUVPD_feb2019 <- read_csv(f)
+dim(ThermoUVPD_feb2019)
+```
+
+
+```{r sanityCheckXIC, fig.retina=3}
+.xicPlot <- function(xic, RAWFILEMETADATA, idx){
+        if(sum(idx) > 0){
+            plot(RAWFILEMETADATA[idxMs2[idx], c('StartTime', 'TIC')])
+            
+            abline(v = (xic$times[max(xic$intensities) == xic$intensities]), col='red')
+        }else{
+            plot(0,0); text(0,0,"no data found", cex=4)
+        }
+}
+
+.xicCheck <- function(SMILES, rawfile, RAWFILEMETA, plot = FALSE, tol=0.1){
+    
+    molecule <- parse.smiles(as.character(SMILES))[[1]]
+    do.isotopes(molecule)
+    
+    # determine mass of protonated molecule
+    (mZ <- get.exact.mass(molecule) + c(-1.007, 1.007))
+    
+    idxMs2 <-  RAWFILEMETA$MSOrder == "Ms2"
+    
+    idxList <- lapply(mZ, function(mass){
+        which(idxMs2[abs(RAWFILEMETA[idxMs2, 'PrecursorMass'] - mass) < tol])
+    })
+    
+    df <- data.frame(n = sapply(idxList, length))
+    
+    if (sum(sapply(idxList, sum)) == 0){
+         return(NULL)
+    }
+    
+    df$SMILES <- rep(as.character(SMILES), 2)
+    df$mass <- mZ
+    
+     # extract ion chromatogram
+    XIC <- readXICs(rawfile, mZ, tol=10)
+     if(plot){
+
+        print(plot(XIC))
+    }
+   
+    df$max.xic <- sapply(XIC, function(x){max(x$intensities)})
+    df$TIC <- sapply(idxList, function(i){
+        sum(RAWFILEMETA[i, 'TIC'])
+    })
+    df$BasePeakIntensity <- sapply(idxList, function(i){
+        sum(RAWFILEMETA[i, 'BasePeakIntensity'])
+    })
+    df$mode <- c('neg', 'pos')
+    df$rawfile <- basename(rawfile)
+    df
+} 
+
+(rawfile <- file.path(Sys.getenv('HOME'), "Downloads",
+  "stds_pos_neg_MS_highconc_UVPD_50_300.raw"))
+
+S <- read.raw(rawfile)rv
+
+.xicCheck(SMILES =  ThermoUVPD_feb2019[48, 'SMILES'],
+          rawfile = rawfile,
+          RAWFILEMETA = S, plot=TRUE)
+
+
+.xicCheck("CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", 
+          rawfile = rawfile, RAWFILEMETA = S, plot=TRUE)
+
+```
+
+
+```{r}
+rv <- lapply(1:nrow(ThermoUVPD_feb2019), function(i){
+    .xicCheck(SMILES =  ThermoUVPD_feb2019[i, 'SMILES'],
+          rawfile = rawfile,
+          RAWFILEMETA = S, plot=FALSE)
+})
+
+rv <- do.call('rbind', rv)
+```
+
+# Assign spectra 
+
+```{r eval=FALSE}
+library(ReSOLUTION)
+mz_1 <- c(58.0287, 111.0441, 168.0655, 210.1125, 400)
+int_1 <- c(23.0000, 999.0000, 843.5855, 999.0000)
+labels_1 <- c("C2H4NO", "C6H7O2", "C8H10NO3", "C11H16NO3")
+smiles_1 <- "O=C(Oc1ccccc1OC(C)C)NC"
+plotSpectrum(mz_1, int_1, main="test spec",labels=labels_1, smiles=smiles_1)
+```
+
+
+3. check neg or pos
+
+
+```
+mass <- "CH15H22O3"
+mass_neg <- "CH15H22O3"  - 1.007
+mass_pos<- "CH15H22O3"  + 1.007
+
+
+/20190212/stds_pos_neg_MS_highconc_HCD_mz100-800.raw
+./20190212/stds_pos_neg_MS_highconc_UVPD_100_150.raw
+./20190212/stds_pos_neg_MS_highconc_UVPD_200_250.raw
+./20190212/stds_pos_neg_MS_highconc_UVPD_50_300.raw
+```
+
+
+
+# TODO
+```
 (github Rmd script ???)
 
 for all [Castel,DBP,KWR, no-frag]:
@@ -17,20 +219,11 @@ TODO(jg,jorainer): filter: 100Da window; top five; ions
 quaNT-score bwplot (intensity ~ SMILES, group=mode, ...)
 goal: show that it is not working in neg mode
 
-1.3. 
+1.3.  (google doc 2.4.2)
+assumption: for uvpd neg mode: electron loss due to electron detachment (Q.E.D) => pos mode
 dotplot (value ~ fragmentType | mode , group=seebelow)
+MS2 TIC / MS1 XIC 
 matched fragments number / number of all detected `fragments` ions 
 matched fragments number / theory possibile (DONE)
 matched fragments intensity / over XIC
-
-
-2.
-
-```{r}
-library(ReSOLUTION)
-mz_1 <- c(58.0287, 111.0441, 168.0655, 210.1125, 400)
-int_1 <- c(23.0000, 999.0000, 843.5855, 999.0000)
-labels_1 <- c("C2H4NO", "C6H7O2", "C8H10NO3", "C11H16NO3")
-smiles_1 <- "O=C(Oc1ccccc1OC(C)C)NC"
-plotSpectrum(mz_1, int_1, main="test spec",labels=labels_1, smiles=smiles_1)
 ```

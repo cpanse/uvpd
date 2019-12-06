@@ -27,7 +27,7 @@ library(rawDiag)
 #rawfiles <- scan(file.path(system.file(package = 'uvpd'),
 #                           "/extdata/rawfiles.txt"), what = character())
 #rawfiles <- rawfiles[grepl("Castell|KWR|DB", rawfiles)]
-(rawfile <- file.path(Sys.getenv('HOME'), "Downloads",
+(rawfile <- file.path(Sys.getenv('HOME'), "Downloads/p2722",
   "stds_pos_neg_MS_highconc_UVPD_50_300.raw"))
 
 
@@ -146,10 +146,10 @@ dim(ThermoUVPD_feb2019)
     df
 } 
 
-(rawfile <- file.path(Sys.getenv('HOME'), "Downloads",
+(rawfile <- file.path(Sys.getenv('HOME'), "Downloads/p2722",
   "stds_pos_neg_MS_highconc_UVPD_50_300.raw"))
 
-S <- read.raw(rawfile)rv
+S <- read.raw(rawfile)
 
 .xicCheck(SMILES =  ThermoUVPD_feb2019[48, 'SMILES'],
           rawfile = rawfile,
@@ -163,13 +163,28 @@ S <- read.raw(rawfile)rv
 
 
 ```{r}
-rv <- lapply(1:nrow(ThermoUVPD_feb2019), function(i){
+
+.forAllRawfiles <- function(rawfile){
+    rv <- lapply(1:nrow(ThermoUVPD_feb2019), function(i){
     .xicCheck(SMILES =  ThermoUVPD_feb2019[i, 'SMILES'],
           rawfile = rawfile,
           RAWFILEMETA = S, plot=FALSE)
 })
 
-rv <- do.call('rbind', rv)
+    rv <- do.call('rbind', rv)
+    rv
+}
+
+```
+
+
+```{r eval=FALSE}
+f <- list.files( p<- file.path(Sys.getenv('HOME'), "Downloads/p2722"))
+
+rv <- lapply(file.path(p, f), .forAllRawfiles)
+allXic <- do.call('rbind', rv)
+
+write_csv(allXic, path ="~/Desktop/p2722-allXic.csv")
 ```
 
 # Assign spectra 

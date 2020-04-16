@@ -6,10 +6,13 @@
 # R 3.6.3
 
 
-library(uvpd)
+#library(uvpd)
 library(metfRag)
 
 library(readr)
+
+library(MsBackendRawFileReader)
+library(protViz)
 
 f <- file.path(system.file(package = 'uvpd'), "/extdata/ThermoUVPD_feb2019.csv")
 
@@ -67,3 +70,64 @@ df <- data.frame(SMILES=ThermoUVPD_feb2019$SMILES,
     exact.mass=m,
     mm = m - 1.007,
     mp = m + 1.007)
+
+
+
+table(df$Group)
+
+
+f <- rawfiles[grepl("KWR", rawfiles)]
+
+.getQuant <- function(i, x){
+  header=x$GetScanFilter(i)
+  intensity <- x$GetSpectrumIntensities(i)
+  mZ <- x$GetSpectrumMasses(i)
+  stopifnot(!x$IsCentroidScan(i))
+
+  pl.centroid <- centroid(mZ, intensity)
+
+ data.frame(tic=sum(pl.centroid$intensity),
+   header=header,
+   scan=i)
+}
+
+pp <- function(rawfile, df, eps=0.1){
+	be <- backendInitialize(MsBackendRawFileReader(), files = rawfile)
+	S <- Spectra(be)
+	x <- S@backend@rawfileReaderObj[[1]]
+	pc <- precursorMz(S) 
+
+	rv.mp <- lapply(1:nrow(df), function(df.idx){
+	       scan.idx <-  which (abs(pc - df$mp[df.idx]) < eps)
+	       if (length(scan.idx) > 0){
+		       message(paste("found+", length(scan.idx), df$SMILES[df.idx], '#', df$Group[df.idx], "in file", basename(rawfile)))
+		       rv <- lapply(scan.idx, .getQuant, x=x)
+		       #print(scan.idx)
+		       rv <- do.call('rbind', rv)
+		       rv$SMILES <- df$SMILES[df.idx]
+		       rv$mode <- 1.007
+		       rv$exact.mass <- df$exact.mass[df.idx]
+		       rv
+	       }
+	})
+	rv.mm <- lapply(1:nrow(df), function(df.idx){
+	       scan.idx <-  which (abs(pc - df$mm[df.idx]) < eps)
+	       if (length(scan.idx) > 0){
+		       message(paste("found-", length(scan.idx), df$SMILES[df.idx], '#', df$Group[df.idx], "in file", basename(rawfile)))
+		       rv <- lapply(scan.idx, .getQuant, x=x)
+		       rv <- do.call('rbind', rv)
+		       rv$SMILES <- df$SMILES[df.idx]
+		       rv$mode <- -1.007
+		       rv$exact.mass <- df$exact.mass[df.idx]
+		       rv
+	       }
+	})
+	rv.mm <- do.call('rbind', rv.mm)
+	rv.mp <- do.call('rbind', rv.mp)
+	rv <- rbind(rv.mm, rv.mp)
+	rv$filename <- basename(rawfile)
+	rv
+}
+
+ uvpdSummary <- do.call('rbind', lapply(rawfiles, pp, df=df, eps=0.01))
+ write.csv(uvpdSummary, file="20200416-uvpd-summary.csv", row.names = FALSE)

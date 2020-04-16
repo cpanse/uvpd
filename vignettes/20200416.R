@@ -36,8 +36,8 @@ rawfiles <- c('/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_200_250_mz50.raw',
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_25_800_mz50.raw',
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_400_500_mz50.raw',
-    '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_50_300_mz50.raw',
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/DBPs/DBP_neg_HCD_20_35_60.raw',
+    '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_50_300_mz50.raw',
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/DBPs/DBP_neg_UVPD_100_150.raw',
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/DBPs/DBP_neg_UVPD_200_250.raw',
     '/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/DBPs/DBP_neg_UVPD_25_800.raw',
@@ -129,5 +129,5 @@ pp <- function(rawfile, df, eps=0.1){
 	rv
 }
 
- uvpdSummary <- do.call('rbind', lapply(rawfiles, pp, df=df, eps=0.01))
- write.csv(uvpdSummary, file="20200416-uvpd-summary.csv", row.names = FALSE)
+ uvpdSummary <- do.call('rbind', lapply(rawfiles[fileidx], pp, df=df, eps=0.01))
+ write.csv(uvpdSummary, file=paste("20200416-uvpd-summary", fileidx, "csv", sep='.'), row.names = FALSE)

@@ -76,19 +76,63 @@ df <- data.frame(SMILES=ThermoUVPD_feb2019$SMILES,
 table(df$Group)
 
 
-f <- rawfiles[grepl("KWR", rawfiles)]
+f <- rawfiles[grepl("KWR", rawfiles)][1]
 
 .getQuant <- function(i, x){
+  stopifnot(!x$IsCentroidScan(i))
+
   header=x$GetScanFilter(i)
   intensity <- x$GetSpectrumIntensities(i)
+
   mZ <- x$GetSpectrumMasses(i)
-  stopifnot(!x$IsCentroidScan(i))
+  pc <- x$GetPrecursorMz(i)
 
   pl.centroid <- centroid(mZ, intensity)
 
- data.frame(tic=sum(pl.centroid$intensity),
+  # extract PrecursorMz Intensity
+
+  mZ.lower <- pc - 1.5
+  mZ.upper <- mZ.lower + 5.0
+
+  idx.pc <- which(mZ.lower < pl.centroid$mZ & pl.centroid$mZ < mZ.upper)
+
+  pc.mZ <- NA
+  pc.intensity <- 0.0
+  pc.sum.window.intensity <- 0.0
+  tic <- sum(pl.centroid$intensity)
+
+  if (length(idx.pc) > 0){
+      #  print(paste("pc", pc, "peaks"))
+      #  print(pl.centroid[idx.pc, ])
+      #  print(diff(pl.centroid[idx.pc, 'mZ']))
+      #  print('#')
+
+	pc.sum.window.intensity <- sum(pl.centroid$intensity[idx.pc])
+  	pc.intensity <- max(pl.centroid$intensity[idx.pc])
+	pc.mZ <- pl.centroid$mZ[idx.pc][which(pl.centroid$intensity[idx.pc] == pc.intensity)[1]]
+  }
+
+
+ data.frame(tic = tic,
+   tic.wopc = tic-pc.sum.window.intensity,
+   pc.sum.window.intensity = pc.sum.window.intensity,
+   pc.intensity = pc.intensity,
+   pc.mZ = pc.mZ,
    header=header,
    scan=i)
+}
+
+
+.determineFragMode <- function(x){
+	modes <- c('hcd20.00', 'hcd35.00', 'hcd60.00', 'uvpd100.00', 'uvpd150.00', 'uvpd200.00', 'uvpd25.00', 'uvpd250.00', 'uvpd300.00', 'uvpd400.00', 'uvpd50.00', 'uvpd500.00', 'uvpd800.00')
+
+	rv <- rep(NA, length(x))
+
+	for (m in modes){
+		rv[grepl(m, x)] <- m
+	}
+
+	rv
 }
 
 pp <- function(rawfile, df, eps=0.1){
@@ -126,6 +170,8 @@ pp <- function(rawfile, df, eps=0.1){
 	rv.mp <- do.call('rbind', rv.mp)
 	rv <- rbind(rv.mm, rv.mp)
 	rv$filename <- basename(rawfile)
+
+	rv$fragmode <- .determineFragMode(rv$header)
 	rv
 }
 

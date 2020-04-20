@@ -78,6 +78,25 @@ table(df$Group)
 
 f <- rawfiles[grepl("KWR", rawfiles)][1]
 
+.extractMasterIntensity <- function(x, i, eps=0.01){
+  pc.intensity <- NA
+  masterScan <- x$GetMasterScans()[i]
+  # message(masterScan)
+
+  pc <- x$GetPrecursorMz(i)
+  intensity <- x$GetSpectrumIntensities(masterScan)
+  mZ <- x$GetSpectrumMasses(masterScan)
+
+  df <- centroid(mZ, intensity)
+
+  idx <- findNN(pc, df$mZ)
+  if (abs( df$mZ[idx] - pc) < eps){
+	  pc.intensity <- df$intensity[idx]
+  }
+
+  pc.intensity
+}
+
 .getQuant <- function(i, x){
   stopifnot(!x$IsCentroidScan(i))
 
@@ -114,9 +133,10 @@ f <- rawfiles[grepl("KWR", rawfiles)][1]
 
 
  data.frame(tic = tic,
-   tic.wopc = tic-pc.sum.window.intensity,
+   tic.wopc = tic - pc.sum.window.intensity,
    pc.sum.window.intensity = pc.sum.window.intensity,
    pc.intensity = pc.intensity,
+   master.intensity = .extractMasterIntensity(x, i),
    pc.mZ = pc.mZ,
    header=header,
    scan=i)

@@ -1,0 +1,66 @@
+---
+title: "supplements"
+author: "AB/CP"
+date: "5/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Compose
+
+* run `20200416.R`
+
+```{r eval=FALSE}
+library(readr)
+file_group <- read_csv("file-group.csv")
+FG <- file_group[paste(file_group$file, ".raw",sep='') %in% X20200423_uvpd$filename, ]
+FG$file <- paste(FG$file, '.raw', sep='')
+
+
+GS <- data.frame(group=ThermoUVPD_feb2019$Group, SMILES=ThermoUVPD_feb2019$SMILES)
+GSF <- merge(GS, FG, by='group')
+
+X20200423_uvpd$m <- paste(X20200423_uvpd$filename, X20200423_uvpd$SMILES)
+
+GSF$m <- paste(GSF$file, GSF$SMILES)
+
+
+X20200423 <- merge(GSF, X20200423_uvpd, by='m')
+
+```
+
+
+## Load
+```{r}
+load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
+```
+
+
+## Sanity check
+
+
+negative mode
+```{r}
+knitr::kable(table(X20200423$file[X20200423$mode < 0], X20200423$Group[X20200423$mode < 0]))
+```
+
+one substance seems to be part of multiple groups!
+
+positive mode
+
+```{r}
+knitr::kable(table(X20200423$file[X20200423$mode > 0], X20200423$Group[X20200423$mode > 0]))
+```
+
+lets exclude `"4-Chlorobenzoic acid"`
+
+```{r}
+X <- X20200423[!(X20200423$Compound=="4-Chlorobenzoic acid"), ]
+knitr::kable(table(X$file[X$mode < 0], X$Group[X$mode < 0]))
+knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
+```
+
+

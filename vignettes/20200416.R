@@ -78,6 +78,25 @@ table(df$Group)
 
 f <- rawfiles[grepl("KWR", rawfiles)][1]
 
+.determineXIC <- function(x, i, ppm = 10, dt = 0.5){
+  	pc <- x$GetPrecursorMz(i)
+	rtime <-  x$GetRtime()[i] / 60
+
+	rv <- x$GetXIC(pc, ppm, "ms")
+
+	n <- length(rv)
+
+	df <- data.frame(times = rv[seq(1, n, by = 2)],
+	  intensities = rv[seq(2, n, by = 2)])
+
+	f <-  rtime - dt  < df$times & df$times < rtime + dt
+	x <- df$times[f]
+	y <- df$intensities[f]
+
+
+	return(protViz:::.trapez(x,y))
+}
+
 .extractMasterIntensity <- function(x, i, eps=0.01){
   pc.intensity <- NA
   masterScan <- x$GetMasterScans()[i]
@@ -137,6 +156,7 @@ f <- rawfiles[grepl("KWR", rawfiles)][1]
    pc.sum.window.intensity = pc.sum.window.intensity,
    pc.intensity = pc.intensity,
    master.intensity = .extractMasterIntensity(x, i),
+   xic = .determineXIC(x, i),
    pc.mZ = pc.mZ,
    header=header,
    scan=i)

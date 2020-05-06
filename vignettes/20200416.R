@@ -67,16 +67,53 @@ rawfiles <- c('/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/
 
 df <- data.frame(SMILES=ThermoUVPD_feb2019$SMILES,
     Group=ThermoUVPD_feb2019$Group,
+    Compound=ThermoUVPD_feb2019$Compound,
     exact.mass=m,
     mm = m - 1.007,
     mp = m + 1.007)
-
 
 
 table(df$Group)
 
 
 f <- rawfiles[grepl("KWR", rawfiles)][1]
+
+.determineXIC <- function(x, i, ppm = 10, dt = 0.5){
+  	pc <- x$GetPrecursorMz(i)
+	rtime <-  x$GetRtime()[i] / 60
+
+	rv <- x$GetXIC(pc, ppm, "ms")
+
+	n <- length(rv)
+
+	df <- data.frame(times = rv[seq(1, n, by = 2)],
+	  intensities = rv[seq(2, n, by = 2)])
+
+	f <-  rtime - dt  < df$times & df$times < rtime + dt
+	x <- df$times[f]
+	y <- df$intensities[f]
+
+
+	return(protViz:::.trapez(x,y))
+}
+
+
+.extractXIC <- function(xic, rtime, dt=0.5){
+	stopifnot(length(xic) == length(rtime))
+	n <- length(xic)
+
+	rv <- sapply(1:n, function(idx){
+		xx <- xic[[idx]]
+		rt <- rtime[idx] / 60
+		f <-  rt - dt  < xx$times & xx$times < rt + dt
+		x <- xx$times[f]
+		y <- xx$intensities[f]
+		protViz:::.trapez(x,y)
+	})
+	rv
+}
+
+
 
 .extractMasterIntensity <- function(x, i, eps=0.01){
   pc.intensity <- NA
@@ -107,6 +144,7 @@ f <- rawfiles[grepl("KWR", rawfiles)][1]
   pc <- x$GetPrecursorMz(i)
 
   pl.centroid <- centroid(mZ, intensity)
+  nMs2 <- nrow(pl.centroid)
 
   # extract PrecursorMz Intensity
 
@@ -137,7 +175,9 @@ f <- rawfiles[grepl("KWR", rawfiles)][1]
    pc.sum.window.intensity = pc.sum.window.intensity,
    pc.intensity = pc.intensity,
    master.intensity = .extractMasterIntensity(x, i),
+  # xic = .determineXIC(x, i),
    pc.mZ = pc.mZ,
+   nMs2 = nMs2,
    header=header,
    scan=i)
 }
@@ -160,6 +200,7 @@ pp <- function(rawfile, df, eps=0.1){
 	S <- Spectra(be)
 	x <- S@backend@rawfileReaderObj[[1]]
 	pc <- precursorMz(S) 
+	rtime <-  x$GetRtime() 
 
 	rv.mp <- lapply(1:nrow(df), function(df.idx){
 	       scan.idx <-  which (abs(pc - df$mp[df.idx]) < eps)
@@ -169,6 +210,8 @@ pp <- function(rawfile, df, eps=0.1){
 		       #print(scan.idx)
 		       rv <- do.call('rbind', rv)
 		       rv$SMILES <- df$SMILES[df.idx]
+		       rv$Compound <- df$Compound[df.idx]
+		       rv$Group <- df$Group[df.idx]
 		       rv$mode <- 1.007
 		       rv$exact.mass <- df$exact.mass[df.idx]
 		       rv
@@ -181,6 +224,8 @@ pp <- function(rawfile, df, eps=0.1){
 		       rv <- lapply(scan.idx, .getQuant, x=x)
 		       rv <- do.call('rbind', rv)
 		       rv$SMILES <- df$SMILES[df.idx]
+		       rv$Compound <- df$Compound[df.idx]
+		       rv$Group <- df$Group[df.idx]
 		       rv$mode <- -1.007
 		       rv$exact.mass <- df$exact.mass[df.idx]
 		       rv
@@ -190,10 +235,19 @@ pp <- function(rawfile, df, eps=0.1){
 	rv.mp <- do.call('rbind', rv.mp)
 	rv <- rbind(rv.mm, rv.mp)
 	rv$filename <- basename(rawfile)
+	rv$rtime <- rtime[rv$scan]
 
 	rv$fragmode <- .determineFragMode(rv$header)
+
+	xic <- readXICs(rawfile, masses = rv$exact.mass + rv$mode, tol = 10)
+	rv$xic <- .extractXIC(xic, rv$rtime)
+
 	rv
 }
 
- uvpdSummary <- do.call('rbind', lapply(rawfiles[fileidx], pp, df=df, eps=0.01))
- write.csv(uvpdSummary, file=paste("20200416-uvpd-summary", fileidx, "csv", sep='.'), row.names = FALSE)
+message(paste("processing fileidx", fileidx, rawfiles[fileidx], "..."))
+uvpdSummary <- do.call('rbind', lapply(rawfiles[fileidx], pp, df=df, eps=0.01))
+write.csv(uvpdSummary, file=paste("20200423-uvpd-summary", fileidx, "csv", sep='.'), row.names = FALSE)
+
+#sessionInfo()
+

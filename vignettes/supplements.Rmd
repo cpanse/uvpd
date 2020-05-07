@@ -64,3 +64,34 @@ knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
 ```
 
 
+```{r}
+knitr::kable(head(X))
+```
+master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a given mass window +- 0.01 Da.
+
+
+find three best matches acc. highest master intensity
+
+```{r}
+data_3sc_v2 <- NULL
+data <- X
+
+files <- unique(X$filename)
+smiles <- unique(X$SMILES)
+fragmodes <- unique (X$fragmode)
+
+
+for (k in 1:length(files)){
+  r <- subset(data, data$filename == files[k])
+  for (j in 1:length(fragmodes)){
+    p <- subset(r, r$fragmode == fragmodes[j])
+    for (i in 1:length(smiles)) {
+      x <- subset(p, p$SMILES == smiles[i])
+      x <- x[order(x$master.intensity),]
+      y <- x[1:3,]
+      print(i)
+      data_3sc_v2 <- rbind(data_3sc_v2,y)
+  }
+  }
+}
+```

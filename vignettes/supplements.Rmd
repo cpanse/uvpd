@@ -72,26 +72,22 @@ master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a gi
 
 find three best matches acc. highest master intensity
 
-```{r}
-data_3sc_v2 <- NULL
-data <- X
 
-files <- unique(X$filename)
-smiles <- unique(X$SMILES)
-fragmodes <- unique (X$fragmode)
+```{r determinetop3}
+cc <- expand.grid(as.character(unique(X$file)), as.character(unique(X$SMILES.x)), as.character(unique(X$fragmode)))
+names(cc) <- c('file', 'SMILES', 'fragmode')
+X$m <- paste(X$file, X$SMILES, X$fragmode)
 
+X.top3 <- do.call('rbind', lapply(paste(cc$file, cc$SMILES, cc$fragmode), function(m){
+    XX <- subset(X, X$m == m)
+    XX <- XX[order(XX$master.intensity), ]
+    n <- nrow(XX)
+    
+    if (nrow(XX) > 2){
+        return(XX[1:3, ])}
+    else if (n > 0){
+        return(XX[1:n, ])}
+    else{return(NULL)}
+}))
 
-for (k in 1:length(files)){
-  r <- subset(data, data$filename == files[k])
-  for (j in 1:length(fragmodes)){
-    p <- subset(r, r$fragmode == fragmodes[j])
-    for (i in 1:length(smiles)) {
-      x <- subset(p, p$SMILES == smiles[i])
-      x <- x[order(x$master.intensity),]
-      y <- x[1:3,]
-      print(i)
-      data_3sc_v2 <- rbind(data_3sc_v2,y)
-  }
-  }
-}
 ```

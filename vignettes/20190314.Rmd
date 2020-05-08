@@ -66,8 +66,14 @@ mz <- 296.116
 stds_pos_neg_MS_highconc_UVPD_100_150_mz50
 # alternative
 do.isotopes(molecule)
+
+get.exact.mass(molecule)
+
+# pos mode
 get.exact.mass(molecule) + 1.007
 
+# neg mode ???
+get.exact.mass(molecule) - 1.007
 
 XIC <- readXICs(rawfile, mz)
 
@@ -78,7 +84,7 @@ plot(XIC)
 
 ```{r}
 eps <- 0.01
-sn <- RAW$scanNumber[which(mz-eps< RAW$PrecursorMass & RAW$PrecursorMass < mz + eps)]
+sn <- RAW$scanNumber[which(mz - eps < RAW$PrecursorMass & RAW$PrecursorMass < mz + eps)]
 ```
 
 ### Get Ms2 Scans

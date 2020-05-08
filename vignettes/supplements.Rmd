@@ -41,8 +41,8 @@ load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
 
 ## Sanity check
 
-
 negative mode
+
 ```{r}
 knitr::kable(table(X20200423$file[X20200423$mode < 0], X20200423$Group[X20200423$mode < 0]))
 ```
@@ -63,20 +63,17 @@ knitr::kable(table(X$file[X$mode < 0], X$Group[X$mode < 0]))
 knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
 ```
 
-
 ```{r}
 knitr::kable(head(X))
 ```
 master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a given mass window +- 0.01 Da.
 
-
 find three best matches acc. highest master intensity
-
 
 ```{r determinetop3}
 cc <- expand.grid(as.character(unique(X$file)), as.character(unique(X$SMILES.x)), as.character(unique(X$fragmode)))
 names(cc) <- c('file', 'SMILES', 'fragmode')
-X$m <- paste(X$file, X$SMILES, X$fragmode)
+X$m <- paste(X$file, X$SMILES.x, X$fragmode)
 
 X.top3 <- do.call('rbind', lapply(paste(cc$file, cc$SMILES, cc$fragmode), function(m){
     XX <- subset(X, X$m == m)

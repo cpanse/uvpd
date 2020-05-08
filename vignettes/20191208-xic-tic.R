@@ -1,6 +1,7 @@
 #R
 
 library(uvpd)
+
 library(metfRag)
 library(rawDiag)
 
@@ -20,7 +21,6 @@ do.isotopes(molecule)
 # determine mass of protonated molecule
 (mZ <- get.exact.mass(molecule) + c(1.007))
 
-
 # extract ion chromatogram
 XIC <- readXICs(rawfile, mZ, tol=10)
 plot(XIC)
@@ -28,6 +28,13 @@ plot(XIC)
 S <- read.raw(rawfile)
 idxMs2 <- S$MSOrder=="Ms2"
 idx <- abs(S[idxMs2, ]$PrecursorMass - mZ) < 0.1
+
+
+sn <- which(idxMs2)[idx][which(max(S$TIC[which(idxMs2)[idx]]) == S$TIC[which(idxMs2)[idx]])]
+
+
+ms2<-readScans(rawfile, which(idxMs2))
+plot(tic1<-S$TIC[idxMs2], tic2<-sapply(ms2, function(x)sum(x$intensity)))
 
 if(sum(idx)>0){
     plot(S[idxMs2[idx], c('StartTime', 'TIC')])

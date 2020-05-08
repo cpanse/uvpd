@@ -43,16 +43,15 @@ library(rawDiag)
 rawfile <- "/srv/www/htdocs/p2722/Proteomics/LUMOS_0/Thermo_feb2019/20190213/7stds/stds_pos_neg_MS_highconc_UVPD_100_150_mz50.raw"
 ```
 
-
-
-
 # XIC
 
 ```{r}
 do.isotopes(molecule)
+
+# determine mass of protonated molecule
 (mZ <- get.exact.mass(molecule) + 1.007)
 
-
+# extract ion chromatogram
 XIC <- readXICs(rawfile, mZ, tol=30)
 ```
 

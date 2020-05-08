@@ -33,6 +33,7 @@ Castell$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell$scanTypeFilt
 some scoring
 
 ```{r}
+library(lattice)
  bwplot( ( nfragments / nMS2 ) ~ scanTypeFilter | formula0 , data =  Castell, scales = list(x = list(rot = 45)))
 
  bwplot( (nfragments/ nScans ) ~ scanTypeFilter | formula0 , data =  Castell, scales = list(x = list(rot = 45)))
@@ -123,9 +124,11 @@ library(ggplot2)
 Castell_sum_ion$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell_sum_ion$scanTypeFilter)
 
 Castell_sum_ion$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell_sum_ion$scanTypeFilter)
+```
 
 
-pdf("Castell_StackedBarPlots.pdf")
+```{r stacked, fig.retina=3}
+#pdf("Castell_StackedBarPlots.pdf")
 lapply(unique(Castell_sum_ion$formula0), function(f){
     df <- Castell_sum_ion[Castell_sum_ion$formula0 == f,]
     gp <- ggplot(data = df, aes(x=scanTypeFilter,
@@ -136,8 +139,10 @@ lapply(unique(Castell_sum_ion$formula0), function(f){
     #gp + facet_wrap(~ grepl("uvpd", df$scanTypeFilter))
    #gp + facet_wrap(~ grepl("uvpd", Castell_sum$scanTypeFilter))
 })
-dev.off()
+#dev.off()
+```
 
+```{r stacked2, fig.retina=3}
 Castell_length$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell_length$scanTypeFilter)
 Castell_length$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell_length$scanTypeFilter)
 
@@ -256,7 +261,7 @@ sim <- function(x, y, resolution=10){
 }
 ```
 
-```{r}
+```{r, eval=FALSE}
 filter0 <- SS$scanTypeFilter == "@uvpd25.00" & SS$formula0 == "C22H25NO2"
 filter1 <- SS$scanTypeFilter == "@uvpd250.00" & SS$formula0 == "C22H25NO2"
 
@@ -310,7 +315,6 @@ rv0 <- do.call('rbind', lapply(as.character(unique(SS$formula0)), run))
 
 
 ```{r dist, fig.retina=3, fig.height=12, fig.width=19, fig.path='./graphics/'}
-
 library(lattice)
 lattice.options(default.theme = standard.theme(color = FALSE))
 levelplot(score ~ formula0.scanTypeFilter * formula1.scanTypeFilter | formula1.formula0, data=rv0, scales = list(x = list(rot = 45)))

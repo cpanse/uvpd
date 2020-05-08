@@ -64,6 +64,10 @@ knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
 ```
 
 ```{r}
+xyplot(log(tic) ~ log(master.intensity) | Compound, groups = fragmode, data=X20200423, pch='.')
+```
+
+```{r}
 knitr::kable(head(X))
 ```
 master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a given mass window +- 0.01 Da.
@@ -71,13 +75,30 @@ master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a gi
 find three best matches acc. highest master intensity
 
 ```{r determinetop3}
+# theoretic possible combinations
 cc <- expand.grid(as.character(unique(X$file)), as.character(unique(X$SMILES.x)), as.character(unique(X$fragmode)))
 names(cc) <- c('file', 'SMILES', 'fragmode')
+cc <- paste(cc$file, cc$SMILES, cc$fragmode)
+
+# this is the real world
 X$m <- paste(X$file, X$SMILES.x, X$fragmode)
 
-X.top3 <- do.call('rbind', lapply(paste(cc$file, cc$SMILES, cc$fragmode), function(m){
-    XX <- subset(X, X$m == m)
-    XX <- XX[order(XX$master.intensity), ]
+ library(parallel)
+X.top3.master.intensity <- do.call('rbind', lapply(cc, function(m){
+    XX <- X[X$m == m, ]
+    XX <- XX[order(XX$master.intensity, decreasing = TRUE), ]
+    n <- nrow(XX)
+    
+    if (nrow(XX) > 2){
+        return(XX[1:3, ])}
+    else if (n > 0){
+        return(XX[1:n, ])}
+    else{return(NULL)}
+}))
+
+X.top3.tic <- do.call('rbind', lapply(cc, function(m){
+    XX <- X[X$m == m, ]
+    XX <- XX[order(XX$tic, decreasing = TRUE), ]
     n <- nrow(XX)
     
     if (nrow(XX) > 2){
@@ -89,4 +110,31 @@ X.top3 <- do.call('rbind', lapply(paste(cc$file, cc$SMILES, cc$fragmode), functi
 
 ```
 
-bla bla
+```{r}
+table(X.top3$file)
+table(X.top3$SMILES.x)
+table(X.top3$fragmode)
+```
+
+```{r}
+image(as.matrix(table(X.top3$file, X.top3$fragmode)))
+```
+
+
+compare pos versus negative
+TODO(CP): order by reacion time / ce
+```{r}
+library(lattice);
+
+lp <- bwplot(log(master.intensity / tic) ~ as.character(mode) | as.factor(fragmode), 
+        data=X.top3.master.intensity, horizontal = F)
+
+lp <- bwplot(log(master.intensity / tic) ~ as.character(mode) | as.factor(fragmode), 
+        data=X.top3.tic, horizontal = F)
+```
+
+```{r}
+plot(X.top3.tic$scan , X.top3.master.intensity$scan)
+```
+
+

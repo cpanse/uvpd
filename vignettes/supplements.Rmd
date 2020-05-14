@@ -2,7 +2,12 @@
 title: "supplements"
 author: "AB/CP"
 date: "5/6/2020"
-output: html_document
+output:
+    html_document:
+        toc_float: true
+        toc: true
+        number_sections: true
+        theme: united
 ---
 
 ```{r setup, include=FALSE}
@@ -68,9 +73,6 @@ knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
 xyplot(log(tic) ~ log(master.intensity) | Compound, groups = fragmode, data=X20200423, pch='.')
 ```
 
-```{r}
-knitr::kable(head(X))
-```
 master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a given mass window +- 0.01 Da.
 
 find three best matches acc. highest master intensity
@@ -96,7 +98,9 @@ X.top3.master.intensity <- do.call('rbind', lapply(cc, function(m){
         return(XX[1:n, ])}
     else{return(NULL)}
 }))
+```
 
+```{r eval=TRUE}
 X.top3.tic <- do.call('rbind', lapply(cc, function(m){
     XX <- X[X$m == m, ]
     XX <- XX[order(XX$tic, decreasing = TRUE), ]
@@ -129,7 +133,9 @@ library(lattice);
 
 lp <- bwplot(log(master.intensity / tic) ~ as.character(mode) | as.factor(fragmode), 
         data=X.top3.master.intensity, horizontal = F)
+```
 
+```{r eval=FALSE}
 lp <- bwplot(log(master.intensity / tic) ~ as.character(mode) | as.factor(fragmode), 
         data=X.top3.tic, horizontal = F)
 ```
@@ -139,151 +145,142 @@ plot(X.top3.tic$scan , X.top3.master.intensity$scan)
 ```
 
 
-# 
-```{r}
-load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
-# load("../inst/extdata/extractedMs2Feature.RData")
-Castell <- do.call('rbind', uvpd.Castell)
-
-Castell$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell$scanTypeFilter)
-
-Castell$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell$scanTypeFilter)
-
-Castell$rawfile <- basename(Castell$rawfile)
-```
-
-filter use only top3
-```{r}
-ff <- (paste(Castell$scan, Castell$rawfile) %in% paste(X.top3.master.intensity$scan, X.top3.master.intensity$filename))
-```
-
-
-```{r}
-library(ggplot2)
-Castell.ff  <- aggregate(intensity ~ mZ * rawfile * scanTypeFilter * SMILES0 * formula * formula0 * type, data=Castell[ff,], FUN=sum)
-dim(Castell)
-dim(Castell.ff)
-lapply(unique(Castell.ff$formula0), function(f){
-    df <- Castell.ff[Castell.ff$formula0 == f, ]
-    
-    gp <- ggplot(data = df, aes(x=scanTypeFilter,
-                                y=log(intensity, 10),  fill=formula)) +
-       geom_bar(stat="identity") +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        facet_wrap(~ formula0)
-    #gp + facet_wrap(~ grepl("uvpd", df$scanTypeFilter))
-   #gp + facet_wrap(~ grepl("uvpd", Castell_sum$scanTypeFilter))
-})
-
-```
-
 # fetch MS2
+
 ```{r}
 library(MsBackendRawFileReader)
-
-X.top3.master.intensity.MS2.profile <- lapply(sort(unique(X.top3.master.intensity$file)), function(f){
-    sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
-    
-    rawfile <- file.path('/Users/cp/Downloads/p2722/', f)
-    message(rawfile)
-    x <- .cnew ("Rawfile", rawfile)
-    
-    rv <- lapply(sn, function(i){
-        mZ <- x$GetSpectrumMasses(i)
-        intensity <- x$GetSpectrumIntensities(i)
-        rv <- data.frame(mZ=mZ, intensity=intensity)
-        rv$file <- f
-        rv$scan <- i
-        rv
-    })
-    rv
-})
-
 ```
 
 
-```{r}
+```{r load_fragments}
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 
 ```
 
 
-```{r}
+```{r load_protViz}
+library(protViz)
+```
 
-X.top3.master.intensity.MS2.centroid <- lapply(sort(unique(X.top3.master.intensity$file)), function(f){
-    sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
-    sm <- X.top3.master.intensity$SMILES.x[X.top3.master.intensity$file==f]
-    cm <- X.top3.master.intensity$Compound[X.top3.master.intensity$file==f]
-    rawfile <- file.path('/Users/cp/Downloads/p2722/', f)
-    message(rawfile)
-    x <- .cnew ("Rawfile", rawfile)
-    
-    rv <- mapply(function(scan, smile, compound){
-        mZ <- x$GetSpectrumMasses(scan)
-        intensity <- x$GetSpectrumIntensities(scan)
+iterate over a files and compounds ...
+```{r define_fragmentMatch}
+.fragmentMatch <- function(absoluteErrorCutOffInDalton=0.001, centroid=TRUE){
+     lapply(sort(unique(X.top3.master.intensity$file)), function(f){
+        sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
+        sm <- X.top3.master.intensity$SMILES.x[X.top3.master.intensity$file==f]
+        cm <- X.top3.master.intensity$Compound[X.top3.master.intensity$file==f]
+        rawfile <- file.path('/Users/cp/Downloads/p2722/', f)
+        message(rawfile)
+        x <- .cnew ("Rawfile", rawfile)
         
-        cc <- protViz::centroid(mZ, intensity)
-        
-        rv <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
-        
-        idx <- which(fragments.treeDepth2$SMILES == as.character(smile))
-        
-        # computed by MetFrag
-        insilico <- fragments.treeDepth1$ms2[[idx]]
-        insilico <- insilico[!is.na(insilico$mZ),]
-        
-        # determine best match
-        NN <- findNN(cc$mZ, insilico$mZ)
-        eps <- insilico$mZ[NN] - cc$mZ 
-        ppmerror <- (eps /  insilico$mZ[NN]) * 1000000
-        
-        fff <- abs(eps) < 0.01
-        message(paste(sum(fff), "/", length(cc$mZ), "intensity coverage", round(sum(cc$intensity[fff])/sum(cc$intensity),2)))
-        
-        rv$file <- f
-        rv$formula <- insilico$formula[NN]
-        rv$compound <- compound
-        rv$type <- insilico$type[NN]
-        rv$eps <- eps
-        rv$ppmerror <- ppmerror
-        rv$scan <- scan
-        #rv$SMILE <- smile
-        #rv[abs(rv$eps) < 0.01,]
-        rv
-    }, scan=sn, smile=sm, compound=cm, SIMPLIFY = FALSE)
-    rv
-})
+        rv2 <- mapply(function(scan, smile, compound){
+            mZ <- x$GetSpectrumMasses(scan)
+            intensity <- x$GetSpectrumIntensities(scan)
+            
+            if (centroid){
+                cc <- protViz::centroid(mZ, intensity)
+            }else{
+                cc <- data.frame(mZ=mZ, intensity=intensity)
+            }
+            
+            rv <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
+            
+            # computed by MetFrag
+            idx <- which(fragments.treeDepth2$SMILES == as.character(smile))
+            insilico <- fragments.treeDepth2$ms2[[idx]]
+            insilico <- insilico[!is.na(insilico$mZ),]
+            
+            # determine best match - assigne in-silico fragment ion to peak
+            NN <- findNN(cc$mZ, insilico$mZ)
+            absoluteError <- insilico$mZ[NN] - cc$mZ 
+            ppmerror <- (abs(absoluteError) /  insilico$mZ[NN]) * 1000000
+            
+            # filtering but we do not remove yet
+            absoluteErrorFilter <- abs(absoluteError) < absoluteErrorCutOffInDalton
+            #message(paste(sum(absoluteErrorFilter), "/", length(cc$mZ), "intensity coverage", round(sum(cc$intensity[fff])/sum(cc$intensity),2)))
+            
+            rv$nPeaks <- length(cc$mZ)
+            rv$nAssignedPeaks <- sum(absoluteErrorFilter)
+            rv$intensityCoverage <- round(sum(cc$intensity[absoluteErrorFilter])/sum(cc$intensity),2)
+            rv$file <- f
+            # TODO(cp)
+            # rv$formula0 <- NA
+            rv$formula <- insilico$formula[NN]
+            rv$compound <- compound
+            rv$type <- insilico$type[NN]
+            rv$eps <- absoluteError
+            rv$ppmerror <- ppmerror
+            rv$scan <- scan
+            #rv$SMILE <- smile
+            rv[absoluteErrorFilter, ]
+        }, scan=sn, smile=sm, compound=cm, SIMPLIFY = FALSE)
+        rv2
+    })
+}
+```
+
+
+```{r X.top3.master.intensity.MS2}
+X.top3.master.intensity.MS2 <- .fragmentMatch(absoluteErrorCutOffInDalton=0.01)
 ```
 
 TODO(AB): check pos/neg mode in in-silico fragments
-
+```{r}
+save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200514.RData", compression_level = 9)
+```
 
 ```{r filterAndMergeXY}
+
 X <- X.top3.master.intensity
 dim(X)
-Y <- do.call('rbind', do.call('rbind', X.top3.master.intensity.MS2.centroid))
-Y <- Y[Y$eps < 0.01,]
+
+# list of list to data.frame
+Y <- do.call('rbind', do.call('rbind', X.top3.master.intensity.MS2))
 dim(Y)
 X$m <- paste(X$file, X$scan)
 Y$m <- paste(Y$file, Y$scan)
 XY <- base::merge(X, Y, by="m")
 dim(XY)
 ```
-
-
 ```{r}
+hist(XY$eps)
+```
+
+```{r stackedbarcharts, fig.retina=3}
 library(ggplot2)
-DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode, data=XY, FUN=sum)
+DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group *mode, data=XY, FUN=sum)
 dim(DF)
 DF$fragmode <- gsub("uvpd50.00", "uvpd050.00", DF$fragmode)
 DF$fragmode <- gsub("uvpd25.00", "uvpd025.00", DF$fragmode)
 
-lapply(unique(DF$compound), function(compound){
+
+.stackedbarcharts <- function(compound){
+    # subsetting
     gp <- ggplot(data = DF[DF$compound == compound, ], 
                  aes(x = fragmode,
                      y = log(intensity, 10),  fill=formula)) +
         geom_bar(stat="identity") +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        facet_wrap(~ compound)
-})
+        facet_wrap(~ compound * Group * mode)
+    gp
+}
+
+.stackedbarcharts("Flubendazole")
+```
+
+```{r allstackedbarchart, echo=FALSE, message=FALSE}
+compounds <- sort(unique(DF$compound))
+lapply(compounds, FUN=.stackedbarcharts)
+```
+
+
+# Session information
+
+
+```
+Rscript -e "rmarkdown::render('supplements.Rmd', output_file='supplements.html')"
+```
+
+```{r}
+sessionInfo()
 ```

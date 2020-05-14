@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(lattice)
 ```
 
 ## Compose
@@ -110,20 +111,20 @@ X.top3.tic <- do.call('rbind', lapply(cc, function(m){
 
 ```
 
-```{r}
-table(X.top3$file)
-table(X.top3$SMILES.x)
-table(X.top3$fragmode)
+```{r eval=FALSE}
+table(X.top3.master.intensity$file)
+table(X.top3.master.intensity$SMILES.x)
+table(X.top3.master.intensity$fragmode)
 ```
 
 ```{r}
-image(as.matrix(table(X.top3$file, X.top3$fragmode)))
+image(as.matrix(table(X.top3.master.intensity$file, X.top3.master.intensity$fragmode)))
 ```
 
 
 compare pos versus negative
 TODO(CP): order by reacion time / ce
-```{r}
+```{r eval=TRUE}
 library(lattice);
 
 lp <- bwplot(log(master.intensity / tic) ~ as.character(mode) | as.factor(fragmode), 
@@ -138,3 +139,120 @@ plot(X.top3.tic$scan , X.top3.master.intensity$scan)
 ```
 
 
+# 
+```{r}
+load(file.path(system.file(package = 'uvpd'), "/extdata/extractedMs2Feature.RData"))
+# load("../inst/extdata/extractedMs2Feature.RData")
+Castell <- do.call('rbind', uvpd.Castell)
+
+Castell$scanTypeFilter <- gsub("@uvpd50.00", "@uvpd050.00", Castell$scanTypeFilter)
+
+Castell$scanTypeFilter <- gsub("@uvpd25.00", "@uvpd025.00", Castell$scanTypeFilter)
+
+Castell$rawfile <- basename(Castell$rawfile)
+```
+
+filter use only top3
+```{r}
+ff <- (paste(Castell$scan, Castell$rawfile) %in% paste(X.top3.master.intensity$scan, X.top3.master.intensity$filename))
+```
+
+
+```{r}
+library(ggplot2)
+Castell.ff  <- aggregate(intensity ~ mZ * rawfile * scanTypeFilter * SMILES0 * formula * formula0 * type, data=Castell[ff,], FUN=sum)
+dim(Castell)
+dim(Castell.ff)
+lapply(unique(Castell.ff$formula0), function(f){
+    df <- Castell.ff[Castell.ff$formula0 == f, ]
+    
+    gp <- ggplot(data = df, aes(x=scanTypeFilter,
+                                y=log(intensity, 10),  fill=formula)) +
+       geom_bar(stat="identity") +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        facet_wrap(~ formula0)
+    #gp + facet_wrap(~ grepl("uvpd", df$scanTypeFilter))
+   #gp + facet_wrap(~ grepl("uvpd", Castell_sum$scanTypeFilter))
+})
+
+```
+
+# fetch MS2
+```{r}
+library(MsBackendRawFileReader)
+
+X.top3.master.intensity.MS2.profile <- lapply(sort(unique(X.top3.master.intensity$file)), function(f){
+    sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
+    
+    rawfile <- file.path('/Users/cp/Downloads/p2722/', f)
+    message(rawfile)
+    x <- .cnew ("Rawfile", rawfile)
+    
+    rv <- lapply(sn, function(i){
+        mZ <- x$GetSpectrumMasses(i)
+        intensity <- x$GetSpectrumIntensities(i)
+        rv <- data.frame(mZ=mZ, intensity=intensity)
+        rv$file <- f
+        rv$scan <- i
+        rv
+    })
+    rv
+})
+
+```
+
+
+```{r}
+load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
+
+```
+
+
+```{r}
+
+X.top3.master.intensity.MS2.centroid <- lapply(sort(unique(X.top3.master.intensity$file))[22], function(f){
+    sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
+    sm <- X.top3.master.intensity$SMILES.x[X.top3.master.intensity$file==f]
+    cm <- X.top3.master.intensity$Compound[X.top3.master.intensity$file==f]
+    rawfile <- file.path('/Users/cp/Downloads/p2722/', f)
+    message(rawfile)
+    x <- .cnew ("Rawfile", rawfile)
+    
+    rv <- mapply(function(scan, smile){
+        mZ <- x$GetSpectrumMasses(scan)
+        intensity <- x$GetSpectrumIntensities(scan)
+        
+        cc <- protViz::centroid(mZ, intensity)
+        
+        rv <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
+        
+        idx <- which(fragments.treeDepth2$SMILES == as.character(smile))
+        
+        # computed by MetFrag
+        insilico <- fragments.treeDepth1$ms2[[idx]]
+        insilico <- insilico[!is.na(insilico$mZ),]
+        
+        # determine best match
+        NN <- findNN(cc$mZ, insilico$mZ)
+        eps <- insilico$mZ[NN] - cc$mZ 
+        ppmerror <- (eps /  insilico$mZ[NN]) * 1000000
+        
+        fff <- abs(eps) < 0.01
+        message(paste(sum(fff), "/", length(cc$mZ), "intensity coverage", round(sum(cc$intensity[fff])/sum(cc$intensity),2)))
+        
+        rv$file <- f
+        rv$formula <- insilico$formula[NN]
+        rv$compound <- compound
+        rv$type <- insilico$type[NN]
+        rv$eps <- eps
+        rv$ppmerror <- ppmerror
+        rv$scan <- scan
+        #rv$SMILE <- smile
+        #rv[abs(rv$eps) < 0.01,]
+        rv
+    }, scan=sn, smile=sm, compound=cm, SIMPLIFY = FALSE)
+    rv
+})
+```
+
+TODO(AB): check pos/neg mode in in-silico fragments

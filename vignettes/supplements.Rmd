@@ -210,7 +210,7 @@ load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 
 ```{r}
 
-X.top3.master.intensity.MS2.centroid <- lapply(sort(unique(X.top3.master.intensity$file))[22], function(f){
+X.top3.master.intensity.MS2.centroid <- lapply(sort(unique(X.top3.master.intensity$file)), function(f){
     sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
     sm <- X.top3.master.intensity$SMILES.x[X.top3.master.intensity$file==f]
     cm <- X.top3.master.intensity$Compound[X.top3.master.intensity$file==f]
@@ -218,7 +218,7 @@ X.top3.master.intensity.MS2.centroid <- lapply(sort(unique(X.top3.master.intensi
     message(rawfile)
     x <- .cnew ("Rawfile", rawfile)
     
-    rv <- mapply(function(scan, smile){
+    rv <- mapply(function(scan, smile, compound){
         mZ <- x$GetSpectrumMasses(scan)
         intensity <- x$GetSpectrumIntensities(scan)
         
@@ -256,3 +256,34 @@ X.top3.master.intensity.MS2.centroid <- lapply(sort(unique(X.top3.master.intensi
 ```
 
 TODO(AB): check pos/neg mode in in-silico fragments
+
+
+```{r filterAndMergeXY}
+X <- X.top3.master.intensity
+dim(X)
+Y <- do.call('rbind', do.call('rbind', X.top3.master.intensity.MS2.centroid))
+Y <- Y[Y$eps < 0.01,]
+dim(Y)
+X$m <- paste(X$file, X$scan)
+Y$m <- paste(Y$file, Y$scan)
+XY <- base::merge(X, Y, by="m")
+dim(XY)
+```
+
+
+```{r}
+library(ggplot2)
+DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode, data=XY, FUN=sum)
+dim(DF)
+DF$fragmode <- gsub("uvpd50.00", "uvpd050.00", DF$fragmode)
+DF$fragmode <- gsub("uvpd25.00", "uvpd025.00", DF$fragmode)
+
+lapply(unique(DF$compound), function(compound){
+    gp <- ggplot(data = DF[DF$compound == compound, ], 
+                 aes(x = fragmode,
+                     y = log(intensity, 10),  fill=formula)) +
+        geom_bar(stat="identity") +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        facet_wrap(~ compound)
+})
+```

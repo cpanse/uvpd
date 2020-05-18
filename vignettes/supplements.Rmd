@@ -15,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 library(lattice)
 ```
 
-## Compose
+# Merge Theoretical Design 
 
 * run `20200416.R`
 
@@ -39,13 +39,16 @@ X20200423 <- merge(GSF, X20200423_uvpd, by='m')
 ```
 
 
-## Load
+# Load 
+
 ```{r}
 load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
 ```
 
 
-## Sanity check
+## Sanity check 
+
+## Quantitiative Results
 
 negative mode
 
@@ -67,6 +70,20 @@ lets exclude `"4-Chlorobenzoic acid"`
 X <- X20200423[!(X20200423$Compound=="4-Chlorobenzoic acid"), ]
 knitr::kable(table(X$file[X$mode < 0], X$Group[X$mode < 0]))
 knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
+```
+
+
+```{r fig.retina=3}
+bwplot(log(tic/master.intensity) ~  as.factor(mode) |  fragmode ,
+       data=X20200423,
+       panel = function(x, y, ...){
+         panel.bwplot(x, y, ...)
+           if (length(x) > 0){
+                 rv <- t.test(y~x)
+                message(rv$p.value)
+                panel.text(1.5, 5,round(rv$p.value, 4), pos=4, cex=0.5)
+           }
+       })
 ```
 
 ```{r}
@@ -145,16 +162,20 @@ plot(X.top3.tic$scan , X.top3.master.intensity$scan)
 ```
 
 
-# fetch MS2
+## Fetch Fragment Ions (MS2)
 
 ```{r}
 library(MsBackendRawFileReader)
 ```
 
+## Load Predicted Fragment Ions
 
 ```{r load_fragments}
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 
+fragmentsPredicted <- as.data.frame(do.call('rbind', lapply(fragments.treeDepth2$ms2, function(x){table(x$type)})))
+
+fragmentsPredicted$formula <- fragments.treeDepth2$formula
 ```
 
 
@@ -162,18 +183,24 @@ load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 library(protViz)
 ```
 
-iterate over a files and compounds ...
+* iterate over a files and compounds ...
+* fetch related MS2 scans using rawDiag
+* assign predicted fragment ion annotation
+
 ```{r define_fragmentMatch}
+
+RAWFILEDIR <- '/Users/cp/Downloads/p2722/'
+
 .fragmentMatch <- function(absoluteErrorCutOffInDalton=0.001, centroid=TRUE){
      lapply(sort(unique(X.top3.master.intensity$file)), function(f){
         sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
         sm <- X.top3.master.intensity$SMILES.x[X.top3.master.intensity$file==f]
         cm <- X.top3.master.intensity$Compound[X.top3.master.intensity$file==f]
-        rawfile <- file.path('/Users/cp/Downloads/p2722/', f)
-        message(rawfile)
+        rawfile <- file.path(RAWFILEDIR, f)
+        message(paste("processing rawfile", rawfile, "..."))
         x <- .cnew ("Rawfile", rawfile)
         
-        rv2 <- mapply(function(scan, smile, compound){
+        rv <- mapply(function(scan, smile, compound){
             mZ <- x$GetSpectrumMasses(scan)
             intensity <- x$GetSpectrumIntensities(scan)
             
@@ -183,7 +210,7 @@ iterate over a files and compounds ...
                 cc <- data.frame(mZ=mZ, intensity=intensity)
             }
             
-            rv <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
+            DF <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
             
             # computed by MetFrag
             idx <- which(fragments.treeDepth2$SMILES == as.character(smile))
@@ -197,24 +224,24 @@ iterate over a files and compounds ...
             
             # filtering but we do not remove yet
             absoluteErrorFilter <- abs(absoluteError) < absoluteErrorCutOffInDalton
-            #message(paste(sum(absoluteErrorFilter), "/", length(cc$mZ), "intensity coverage", round(sum(cc$intensity[fff])/sum(cc$intensity),2)))
             
-            rv$nPeaks <- length(cc$mZ)
-            rv$nAssignedPeaks <- sum(absoluteErrorFilter)
-            rv$intensityCoverage <- round(sum(cc$intensity[absoluteErrorFilter])/sum(cc$intensity),2)
-            rv$file <- f
+            DF$nPeaks <- length(cc$mZ)
+            DF$nAssignedPeaks <- sum(absoluteErrorFilter)
+            DF$intensityCoverage <- round(sum(cc$intensity[absoluteErrorFilter])/sum(cc$intensity),2)
+            DF$file <- f
             # TODO(cp)
             # rv$formula0 <- NA
-            rv$formula <- insilico$formula[NN]
-            rv$compound <- compound
-            rv$type <- insilico$type[NN]
-            rv$eps <- absoluteError
-            rv$ppmerror <- ppmerror
-            rv$scan <- scan
+            DF$formula0 <- fragments.treeDepth2$formula[idx]
+            DF$formula <- insilico$formula[NN]
+            DF$compound <- compound
+            DF$type <- insilico$type[NN]
+            DF$eps <- absoluteError
+            DF$ppmerror <- ppmerror
+            DF$scan <- scan
             #rv$SMILE <- smile
-            rv[absoluteErrorFilter, ]
+            DF[absoluteErrorFilter, ]
         }, scan=sn, smile=sm, compound=cm, SIMPLIFY = FALSE)
-        rv2
+        rv
     })
 }
 ```
@@ -224,13 +251,15 @@ iterate over a files and compounds ...
 X.top3.master.intensity.MS2 <- .fragmentMatch(absoluteErrorCutOffInDalton=0.01)
 ```
 
+
+# Compose Result Table
 TODO(AB): check pos/neg mode in in-silico fragments
+
 ```{r}
 save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200514.RData", compression_level = 9)
 ```
 
 ```{r filterAndMergeXY}
-
 X <- X.top3.master.intensity
 dim(X)
 
@@ -242,9 +271,27 @@ Y$m <- paste(Y$file, Y$scan)
 XY <- base::merge(X, Y, by="m")
 dim(XY)
 ```
-```{r}
+
+## Sanity checks
+
+absolute error
+```{r absoluteError}
 hist(XY$eps)
 ```
+
+```{r}
+table(XY$type, XY$mode)
+```
+
+```{r}
+table(XY$type, XY$Group)
+```
+
+```{r}
+knitr::kable(fragmentsDetected <- (table(XY$formula0, XY$type)))
+```
+
+## Stacked Bar Charts
 
 ```{r stackedbarcharts, fig.retina=3}
 library(ggplot2)
@@ -252,7 +299,6 @@ DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group 
 dim(DF)
 DF$fragmode <- gsub("uvpd50.00", "uvpd050.00", DF$fragmode)
 DF$fragmode <- gsub("uvpd25.00", "uvpd025.00", DF$fragmode)
-
 
 .stackedbarcharts <- function(compound){
     # subsetting
@@ -273,9 +319,7 @@ compounds <- sort(unique(DF$compound))
 lapply(compounds, FUN=.stackedbarcharts)
 ```
 
-
 # Session information
-
 
 ```
 Rscript -e "rmarkdown::render('supplements.Rmd', output_file='supplements.html')"

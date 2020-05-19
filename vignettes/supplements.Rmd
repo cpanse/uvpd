@@ -80,7 +80,7 @@ bwplot(log(tic/master.intensity) ~  as.factor(mode) |  fragmode ,
          panel.bwplot(x, y, ...)
            if (length(x) > 0){
                  rv <- t.test(y~x)
-                message(rv$p.value)
+                message(rv)
                 panel.text(1.5, 5,round(rv$p.value, 4), pos=4, cex=0.5)
            }
        })
@@ -301,17 +301,19 @@ DF$fragmode <- gsub("uvpd50.00", "uvpd050.00", DF$fragmode)
 DF$fragmode <- gsub("uvpd25.00", "uvpd025.00", DF$fragmode)
 
 .stackedbarcharts <- function(compound){
+   
     # subsetting
     gp <- ggplot(data = DF[DF$compound == compound, ], 
                  aes(x = fragmode,
-                     y = log(intensity, 10),  fill=formula)) +
-        geom_bar(stat="identity") +
+                     y = log(intensity, 10),
+                     fill=reorder(formula, mZ))) +
+        geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        facet_wrap(~ compound * Group * mode)
+        facet_wrap(~ compound * Group * mode, scales="free")
     gp
 }
 
-.stackedbarcharts("Flubendazole")
+.stackedbarcharts(compound = "Flubendazole")
 ```
 
 ```{r allstackedbarchart, echo=FALSE, message=FALSE}

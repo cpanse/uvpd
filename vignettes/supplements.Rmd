@@ -173,9 +173,9 @@ library(MsBackendRawFileReader)
 ```{r load_fragments}
 load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.RData"))
 
-fragmentsPredicted <- as.data.frame(do.call('rbind', lapply(fragments.treeDepth2$ms2, function(x){table(x$type)})))
+fragmentsPredicted <- as.data.frame(do.call('rbind', lapply(fragments.treeDepth1$ms2, function(x){table(x$type)})))
 
-fragmentsPredicted$formula <- fragments.treeDepth2$formula
+fragmentsPredicted$formula <- fragments.treeDepth1$formula
 ```
 
 
@@ -191,7 +191,7 @@ library(protViz)
 
 RAWFILEDIR <- '/Users/cp/Downloads/p2722/'
 
-.fragmentMatch <- function(absoluteErrorCutOffInDalton=0.001, centroid=TRUE){
+.fragmentMatch <- function(absoluteErrorCutOffInDalton=0.01, centroid=TRUE){
      lapply(sort(unique(X.top3.master.intensity$file)), function(f){
         sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
         sm <- X.top3.master.intensity$SMILES.x[X.top3.master.intensity$file==f]
@@ -213,8 +213,8 @@ RAWFILEDIR <- '/Users/cp/Downloads/p2722/'
             DF <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
             
             # computed by MetFrag
-            idx <- which(fragments.treeDepth2$SMILES == as.character(smile))
-            insilico <- fragments.treeDepth2$ms2[[idx]]
+            idx <- which(fragments.treeDepth1$SMILES == as.character(smile))
+            insilico <- fragments.treeDepth1$ms2[[idx]]
             insilico <- insilico[!is.na(insilico$mZ),]
             
             # determine best match - assigne in-silico fragment ion to peak
@@ -246,9 +246,9 @@ RAWFILEDIR <- '/Users/cp/Downloads/p2722/'
 }
 ```
 
-
+### Filter
 ```{r X.top3.master.intensity.MS2}
-X.top3.master.intensity.MS2 <- .fragmentMatch(absoluteErrorCutOffInDalton=0.01)
+X.top3.master.intensity.MS2 <-.fragmentMatch(absoluteErrorCutOffInDalton=0.01)
 ```
 
 
@@ -293,32 +293,41 @@ knitr::kable(fragmentsDetected <- (table(XY$formula0, XY$type)))
 
 ## Stacked Bar Charts
 
+```{r fig.width=20}
+bwplot(ppmerror ~ fragmode | compound, data=XY, scales = list(x = list(rot = 45)))
+```
+
 ```{r stackedbarcharts, fig.retina=3}
 library(ggplot2)
-DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group *mode, data=XY, FUN=sum)
+
+DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group *mode, data=XY[XY$ppmerror<20,], FUN=sum)
 dim(DF)
 DF$fragmode <- gsub("uvpd50.00", "uvpd050.00", DF$fragmode)
 DF$fragmode <- gsub("uvpd25.00", "uvpd025.00", DF$fragmode)
+#levels(DF$fragmode) <- unique(DF$fragmode)
 
-.stackedbarcharts <- function(compound){
-   
-    # subsetting
-    gp <- ggplot(data = DF[DF$compound == compound, ], 
-                 aes(x = fragmode,
+.stackedbarcharts <- function(DF, compound = "Triadimenol"){
+    S <-DF[DF$compound == compound, ]
+    gp <- ggplot(data = S, 
+                 aes(x = factor(fragmode, levels = sort(unique(DF$fragmode))),
                      y = log(intensity, 10),
                      fill=reorder(formula, mZ))) +
         geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
+        scale_x_discrete(drop=FALSE) +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        facet_wrap(~ compound * Group * mode, scales="free")
-    gp
+        facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
+
+   # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
+   gp
 }
 
-.stackedbarcharts(compound = "Flubendazole")
+.stackedbarcharts(DF, compound = "Flubendazole")
+.stackedbarcharts(DF, compound = "Triadimenol")
 ```
 
 ```{r allstackedbarchart, echo=FALSE, message=FALSE}
 compounds <- sort(unique(DF$compound))
-lapply(compounds, FUN=.stackedbarcharts)
+lapply(compounds, FUN=.stackedbarcharts, DF=DF)
 ```
 
 # Session information

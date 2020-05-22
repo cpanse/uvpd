@@ -248,15 +248,15 @@ RAWFILEDIR <- '/Users/cp/Downloads/p2722/'
 
 ### Filter
 ```{r X.top3.master.intensity.MS2}
-X.top3.master.intensity.MS2 <-.fragmentMatch(absoluteErrorCutOffInDalton=0.01)
+X.top3.master.intensity.MS2 <-.fragmentMatch(absoluteErrorCutOffInDalton=1.0)
 ```
 
 
 # Compose Result Table
 TODO(AB): check pos/neg mode in in-silico fragments
 
-```{r}
-save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200514.RData", compression_level = 9)
+```{r eval=FALSE}
+save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200522.RData", compression_level = 9)
 ```
 
 ```{r filterAndMergeXY}
@@ -307,8 +307,8 @@ DF$fragmode <- gsub("uvpd25.00", "uvpd025.00", DF$fragmode)
 #levels(DF$fragmode) <- unique(DF$fragmode)
 
 .stackedbarcharts <- function(DF, compound = "Triadimenol"){
-    S <-DF[DF$compound == compound, ]
-    gp <- ggplot(data = S, 
+    S <- DF[DF$compound == compound, ]
+    gp <- ggplot(data = S,
                  aes(x = factor(fragmode, levels = sort(unique(DF$fragmode))),
                      y = log(intensity, 10),
                      fill=reorder(formula, mZ))) +

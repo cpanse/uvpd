@@ -14,7 +14,10 @@ library(DT)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
     
-    
+  output$selectRData <- renderUI({
+    selectInput("rdata", "rdata", c('uvpd.20200522.RData','uvpd.20200612.RData'), multiple = FALSE, selected = 'uvpd.20200612.RData')
+  })
+  
     getData0 <- reactive({
         e <- new.env()
         load(input$rdata, envir = e)
@@ -60,10 +63,7 @@ shinyServer(function(input, output) {
         message(rv)
         rv
     })
-    output$selectRData <- renderUI({
-        selectInput("rdata", "rdata", c('uvpd.20200522.RData','uvpd.20200611.RData'), multiple = FALSE, selected = 'uvpd.20200522.RData')
-    })
-    
+     
     output$selectCompound <- renderUI({
         selectInput("compound", "compound", getCompound(), multiple = FALSE, selected = "Triadimenol")
     })
@@ -125,4 +125,11 @@ shinyServer(function(input, output) {
                           scales = list(x = list(rot = 45)),
                           layout=c(6,7))
     }, width=1000, height=1000)
+    
+    output$top3 <- renderPlot({
+      lattice::xyplot(tic ~ master.intensity | fragmode * Compound,
+           #subset = Compound == "Triadimenol",
+           group=fragmode,
+           data=getFilteredData())
+    }, width=1000)
 })

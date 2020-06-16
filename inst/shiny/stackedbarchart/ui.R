@@ -33,6 +33,7 @@ shinyUI(fluidPage(
             hr(),
             tableOutput('table'),
             plotOutput("distPlot"),
+            plotOutput("top3"),
             plotOutput("xyplot")
            # plotOutput("barchart")
            

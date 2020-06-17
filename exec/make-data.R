@@ -50,4 +50,27 @@ summary.analyze.uvpd <- function(S, group="Castell"){
     
 }
 
- 
+make_X20200612 <- function(){
+    library(readr)
+    ThermoUVPD_feb2019 <- read_csv(file.path(system.file(package = 'uvpd'),
+                                             "/extdata/ThermoUVPD_feb2019.csv"))
+    
+    X20200612_uvpd <- read_csv("../inst/extdata/20200612-uvpd.csv")
+    
+    file_group <- read_csv("../inst/extdata/file-group.csv")
+    
+    FG <- file_group[paste(file_group$file, ".raw",sep='') %in% X20200612_uvpd$filename, ]
+    FG$file <- paste(FG$file, '.raw', sep='')
+    
+    
+    GS <- data.frame(group=ThermoUVPD_feb2019$Group, SMILES=ThermoUVPD_feb2019$SMILES)
+    GSF <- merge(GS, FG, by='group')
+    
+    X20200612_uvpd$m <- paste(X20200612_uvpd$filename, X20200612_uvpd$SMILES)
+    
+    GSF$m <- paste(GSF$file, GSF$SMILES)
+    
+    
+    X20200612 <- merge(GSF, X20200612_uvpd, by='m')
+    save(X20200612, file='/tmp/X20200612.RData')
+}

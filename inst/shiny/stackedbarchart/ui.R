@@ -21,7 +21,8 @@ shinyUI(fluidPage(
             tagList(
                 htmlOutput('selectRData'),
                 htmlOutput('selectCompound'),
-                selectInput("ppmerror", "ppm error cut-off",c(1, 5, 10, 15, 20, 50, 100), multiple = FALSE, selected = 10)
+                selectInput("ppmerror", "ppm error cut-off",c(1, 5, 10, 15, 20, 50, 100), multiple = FALSE, selected = 10),
+                htmlOutput('selectCluster')
             )),
         
         # Show a plot of the generated distribution

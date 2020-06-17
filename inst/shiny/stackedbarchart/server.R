@@ -19,6 +19,10 @@ shinyServer(function(input, output) {
                  multiple = FALSE, selected = 'uvpd.20200612.RData')
   })
   
+  output$selectCluster <- renderUI({
+    selectInput("clusterid", "clusterid", getClsuterIds(),
+                multiple = FALSE, selected = getClsuterIds()[1])
+  })
 
   getData <- reactive({
     e <- new.env()
@@ -48,7 +52,9 @@ shinyServer(function(input, output) {
                        c("Compound", "Bruto formula", "Cluster number", "Group")]
   })
   
-  
+  getClsuterIds <- reactive({
+    sort(unique(getThermoUVPD_feb2019()$`Cluster number`))
+  })
   
   getFilteredData <- reactive({
     DF <- getData()
@@ -56,9 +62,23 @@ shinyServer(function(input, output) {
     DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror), ]
   })
   
+  getFilteredClusterData <- reactive({
+    DF <- getData()
+    
+    S <- getThermoUVPD_feb2019()
+    
+    compound <- unique(S$Compound[S$`Cluster number` == input$clusterid])
+    DF[DF$compound %in% compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+  })
+  
   getAggregatedData <- reactive({
     aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode,
               data=getFilteredData(), FUN=sum)
+  })
+  
+  getAggregatedClusterData <- reactive({
+    aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode,
+              data=getFilteredClusterData(), FUN=sum)
   })
   
   getLevels <- reactive({
@@ -120,14 +140,14 @@ shinyServer(function(input, output) {
   
   output$stackedBarChartGroup <- renderPlot({
     
-    gp <- ggplot(data = getAggregatedData(),
+    gp <- ggplot(data = getAggregatedClusterData(),
                  aes(x = factor(fragmode, levels = getLevels()),
                      y = log(intensity, 10),
                      fill=reorder(formula, mZ))) +
       geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
       scale_x_discrete(drop=FALSE) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-      facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
+      facet_wrap(~ compound , scales="free", drop=FALSE)
     
     # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
     gp

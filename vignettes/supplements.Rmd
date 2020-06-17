@@ -17,32 +17,15 @@ library(lattice)
 
 # Merge Theoretical Design 
 
-* run `20200416.R`
-
-```{r eval=FALSE}
-library(readr)
-file_group <- read_csv("file-group.csv")
-FG <- file_group[paste(file_group$file, ".raw",sep='') %in% X20200423_uvpd$filename, ]
-FG$file <- paste(FG$file, '.raw', sep='')
-
-
-GS <- data.frame(group=ThermoUVPD_feb2019$Group, SMILES=ThermoUVPD_feb2019$SMILES)
-GSF <- merge(GS, FG, by='group')
-
-X20200423_uvpd$m <- paste(X20200423_uvpd$filename, X20200423_uvpd$SMILES)
-
-GSF$m <- paste(GSF$file, GSF$SMILES)
-
-
-X20200423 <- merge(GSF, X20200423_uvpd, by='m')
-
-```
+* run `20200416.R` 
+* run `make_X20200612` see file `make-data.R`
 
 
 # Load 
 
 ```{r}
-load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
+# load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
+load(file.path(system.file(package = 'uvpd'), "/extdata/X20200612.RData"))
 ```
 
 
@@ -53,7 +36,7 @@ load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
 negative mode
 
 ```{r}
-knitr::kable(table(X20200423$file[X20200423$mode < 0], X20200423$Group[X20200423$mode < 0]))
+knitr::kable(table(X20200612$file[X20200612$mode < 0], X20200612$Group[X20200612$mode < 0]))
 ```
 
 one substance seems to be part of multiple groups!
@@ -61,13 +44,13 @@ one substance seems to be part of multiple groups!
 positive mode
 
 ```{r}
-knitr::kable(table(X20200423$file[X20200423$mode > 0], X20200423$Group[X20200423$mode > 0]))
+knitr::kable(table(X20200612$file[X20200612$mode > 0], X20200612$Group[X20200612$mode > 0]))
 ```
 
 lets exclude `"4-Chlorobenzoic acid"`
 
-```{r}
-X <- X20200423[!(X20200423$Compound=="4-Chlorobenzoic acid"), ]
+```{r makeX}
+X <- X20200612[!(X20200612$Compound=="4-Chlorobenzoic acid"), ]
 knitr::kable(table(X$file[X$mode < 0], X$Group[X$mode < 0]))
 knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
 ```
@@ -75,19 +58,19 @@ knitr::kable(table(X$file[X$mode > 0], X$Group[X$mode > 0]))
 
 ```{r fig.retina=3}
 bwplot(log(tic/master.intensity) ~  as.factor(mode) |  fragmode ,
-       data=X20200423,
+       data=X20200612,
        panel = function(x, y, ...){
          panel.bwplot(x, y, ...)
            if (length(x) > 0){
                  rv <- t.test(y~x)
-                message(rv)
+                #message(rv)
                 panel.text(1.5, 5,round(rv$p.value, 4), pos=4, cex=0.5)
            }
        })
 ```
 
 ```{r}
-xyplot(log(tic) ~ log(master.intensity) | Compound, groups = fragmode, data=X20200423, pch='.')
+xyplot(log(tic) ~ log(master.intensity) | Compound, groups = fragmode, data=X20200612, pch='.')
 ```
 
 master intensity =def= masterscan (MS1) isolated precursor m/z intensity in a given mass window +- 0.01 Da.
@@ -117,7 +100,7 @@ X.top3.master.intensity <- do.call('rbind', lapply(cc, function(m){
 }))
 ```
 
-```{r eval=TRUE}
+```{r determineTop3, eval=FALSE}
 X.top3.tic <- do.call('rbind', lapply(cc, function(m){
     XX <- X[X$m == m, ]
     XX <- XX[order(XX$tic, decreasing = TRUE), ]
@@ -157,7 +140,7 @@ lp <- bwplot(log(master.intensity / tic) ~ as.character(mode) | as.factor(fragmo
         data=X.top3.tic, horizontal = F)
 ```
 
-```{r}
+```{r eval=FALSE}
 plot(X.top3.tic$scan , X.top3.master.intensity$scan)
 ```
 
@@ -256,7 +239,7 @@ X.top3.master.intensity.MS2 <-.fragmentMatch(absoluteErrorCutOffInDalton=1.0)
 TODO(AB): check pos/neg mode in in-silico fragments
 
 ```{r eval=FALSE}
-save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200522.RData", compression_level = 9)
+save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200612.RData", compression_level = 9)
 ```
 
 ```{r filterAndMergeXY}

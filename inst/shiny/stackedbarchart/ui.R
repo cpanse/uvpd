@@ -21,6 +21,7 @@ shinyUI(fluidPage(
             tagList(
                 htmlOutput('selectRData'),
                 htmlOutput('selectCompound'),
+                checkboxInput("removePC", "remove precursor items", value = FALSE, width = NULL),
                 selectInput("ppmerror", "ppm error cut-off",c(1, 5, 10, 15, 20, 50, 100), multiple = FALSE, selected = 10),
                 htmlOutput('selectCluster')
             )),
@@ -29,6 +30,7 @@ shinyUI(fluidPage(
         mainPanel(tabsetPanel(
             tabPanel("stacked", list(
                 column(width = 10,
+                       htmlOutput("stackedBarChartText"),
                        plotOutput("stackedBarChart"),
                        plotOutput("top3"),
                        plotOutput("bwplot"),
@@ -41,7 +43,7 @@ shinyUI(fluidPage(
             tabPanel("error", list(
                 column(width = 10,       
                        plotOutput("distPlot"),
-                       tableOutput('table'),
+                       tableOutput('tableFreq'),
                        
                 ))),
             tabPanel("ms2", list(

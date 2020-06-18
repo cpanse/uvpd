@@ -15,8 +15,8 @@ library(DT)
 shinyServer(function(input, output) {
   
   output$selectRData <- renderUI({
-    selectInput("rdata", "rdata", c('uvpd.20200522.RData', 'uvpd.20200612.RData'),
-                 multiple = FALSE, selected = 'uvpd.20200612.RData')
+    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData'),
+                 multiple = FALSE, selected = 'uvpd_20200612.RData')
   })
   
   output$selectCluster <- renderUI({
@@ -30,9 +30,9 @@ shinyServer(function(input, output) {
     fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
    
     load(fn, envir = e)
-    X<- e$X.top3.master.intensity
-    Y <- Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
-    
+    X <- e$X.top3.master.intensity
+    #Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
+    Y <- e$X.top3.master.intensity.MS2
     X$m <- paste(X$file, X$scan)
     Y$m <- paste(Y$file, Y$scan)
     XY <- base::merge(X, Y, by="m")
@@ -58,13 +58,28 @@ shinyServer(function(input, output) {
   
   getFilteredData <- reactive({
     DF <- getData()
-    
+    if(input$removePC){
+      META <- getThermoUVPD_feb2019()
+      formula.pc <- META[META$Compound %in% input$compound, 2]
+      message(formula.pc)
+      DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
+    }
+
     DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror), ]
   })
   
+  getFormulaPC <- reactive({
+    META <- getThermoUVPD_feb2019()
+    formula.pc <- META[META$Compound %in% input$compound, 2]
+    formula.pc
+  })
   getFilteredClusterData <- reactive({
     DF <- getData()
-    
+    if(input$removePC){
+      formula.pc <- getFormulaPC()
+      message(formula.pc)
+      DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
+    }
     S <- getThermoUVPD_feb2019()
     
     compound <- unique(S$Compound[S$`Cluster number` == input$clusterid])
@@ -72,8 +87,11 @@ shinyServer(function(input, output) {
   })
   
   getAggregatedData <- reactive({
-    aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode,
+    DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode,
               data=getFilteredData(), FUN=sum)
+    
+
+    DF
   })
   
   getAggregatedClusterData <- reactive({
@@ -106,7 +124,7 @@ shinyServer(function(input, output) {
   })
   
   
-  getTable <- reactive({
+  getTableFreq <- reactive({
     DF <- getAggregatedData()
     print(names(DF))
     rv <- table(unique(subset(DF, select=c('fragmode','formula')))[,1])
@@ -118,25 +136,50 @@ shinyServer(function(input, output) {
     getThermoUVPD_feb2019()  
   })
   
-  output$table <- renderTable({
+  output$tableFreq <- renderTable({
     
-    getTable()
+    getTableFreq()
   })
   
-  output$stackedBarChart <- renderPlot({
+
+  
+  output$stackedBarChartText <- renderText({ 
+    #x  "You have selected this"
+    #DF <- getAggregatedData()
     
-    gp <- ggplot(data = getAggregatedData(),
+    DF <- getThermoUVPD_feb2019()
+    
+    paste(DF[DF$Compound %in% input$compound, ], col=',')
+  })
+  
+  gg_color_hue <- function(n) {
+    hues = seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+  }
+  
+  output$stackedBarChart <- renderPlot({
+    DF <- getAggregatedData()
+    n <- length(unique(DF$formula))
+    
+    cm <- gg_color_hue(n)
+    if (getFormulaPC() %in% as.character(DF$formula)){
+      cm <- c(gg_color_hue(n-1),'grey')
+    }
+    
+    
+    gp <- ggplot(data = DF,
                  aes(x = factor(fragmode, levels = getLevels()),
                      y = log(intensity, 10),
                      fill=reorder(formula, mZ))) +
       geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
       scale_x_discrete(drop=FALSE) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      scale_fill_manual(values = cm) +
       facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
     
     # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
     gp
-  },width=1000,height = 400)
+  }, width=1000, height = 400)
   
   output$stackedBarChartGroup <- renderPlot({
     

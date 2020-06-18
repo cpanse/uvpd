@@ -26,6 +26,7 @@ library(lattice)
 ```{r}
 # load(file.path(system.file(package = 'uvpd'), "/extdata/X20200423.RData"))
 load(file.path(system.file(package = 'uvpd'), "/extdata/X20200612.RData"))
+X20200612 <- X20200612_uvpd
 ```
 
 

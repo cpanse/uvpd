@@ -64,7 +64,7 @@ area of cheminformatic/ (in-silico) mass spectrometry.
 ```{r}
 install.packages('shiny')
 install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.2.tar.gz')
-runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
+shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 ```
 
 ### docker

@@ -24,11 +24,10 @@ shinyServer(function(input, output) {
                 multiple = FALSE, selected = getClsuterIds()[1])
   })
 
-  getData <- reactive({
+  
+  # ease for debugging
+  .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200612.RData')){
     e <- new.env()
-    
-    fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
-   
     load(fn, envir = e)
     X <- e$X.top3.master.intensity
     #Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
@@ -40,6 +39,11 @@ shinyServer(function(input, output) {
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
     XY
+  }
+  
+  getData <- reactive({
+    fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
+    .gd(fn)
   })
   
   
@@ -124,6 +128,35 @@ shinyServer(function(input, output) {
   })
   
   
+  getScoreTable <- reactive({
+    A <-aggregate(intensity ~ fragmode * compound * mode * master.intensity * nAssignedPeaks  * nMs2 * nPeaks * file.y *scan.y,
+                  data=getFilteredData(), FUN=sum)
+    
+    
+    A$score1 <- A$nAssignedPeaks / A$nPeaks
+    A$score2 <- A$nAssignedPeaks / A$nMs2
+    A$score3 <- A$intensity / A$master.intensity 
+    A[order(A$fragmode), ]
+    
+  })
+  output$tableScore <- renderTable({
+    
+    getScoreTable()
+    
+  })
+  
+  
+  output$scorePlot <- renderPlot({
+    A <- getScoreTable()
+    
+    op <- par(mfrow=c(1, 3))
+    
+    hist(A$score1)
+    hist(A$score2)
+    hist(A$score3)
+  })
+  
+  
   getTableFreq <- reactive({
     DF <- getAggregatedData()
     print(names(DF))
@@ -139,6 +172,13 @@ shinyServer(function(input, output) {
   output$tableFreq <- renderTable({
     
     getTableFreq()
+  })
+  
+  
+  
+  output$tableFilteredData <- renderTable({
+    
+    getFilteredData()
   })
   
 

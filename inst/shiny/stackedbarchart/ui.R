@@ -30,10 +30,11 @@ shinyUI(fluidPage(
         mainPanel(tabsetPanel(
             tabPanel("stacked", list(
                 column(width = 10,
+                       plotOutput("scorePlot"),
                        htmlOutput("stackedBarChartText"),
                        plotOutput("stackedBarChart"),
                        plotOutput("top3"),
-                       plotOutput("bwplot"),
+                       plotOutput("bwplot")
                 ))),
             tabPanel("stacked group", list(
                 column(width = 10,
@@ -54,6 +55,14 @@ shinyUI(fluidPage(
             tabPanel("matchen in-silico cluster table", list(
                 column(width = 10,   
                        tableOutput('ThermoUVPD'),
+                ))),
+            tabPanel("data", list(
+                column(width = 10,   
+                       tableOutput('tableFilteredData'),
+                ))),
+            tabPanel("score", list(
+                column(width = 10,   
+                       tableOutput('tableScore'),
                 )))
             
         ) 

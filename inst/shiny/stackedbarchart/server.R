@@ -28,10 +28,16 @@ shinyServer(function(input, output) {
   # ease for debugging
   .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200612.RData')){
     e <- new.env()
+    
+    load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.RData"), envir = e)
+    pp <- data.frame(formula = e$fragments.treeDepth1$formula,
+                     nPredictedPeaks = sapply(e$fragments.treeDepth1$ms2, function(x){length(unique(x$mZ))}))
+    
     load(fn, envir = e)
     X <- e$X.top3.master.intensity
     #Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
     Y <- e$X.top3.master.intensity.MS2
+    Y <- merge(Y, pp, by.x='formula0', by.y='formula')
     X$m <- paste(X$file, X$scan)
     Y$m <- paste(Y$file, Y$scan)
     XY <- base::merge(X, Y, by="m")
@@ -42,8 +48,9 @@ shinyServer(function(input, output) {
   }
   
   getData <- reactive({
+    message("GETDATA BEGIN")
     fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
-    .gd(fn)
+    unique(.gd(fn))
   })
   
   
@@ -129,20 +136,29 @@ shinyServer(function(input, output) {
   
   
   getScoreTable <- reactive({
-    A <-aggregate(intensity ~ fragmode * compound * mode * master.intensity * nAssignedPeaks  * nMs2 * nPeaks * file.y *scan.y,
-                  data=getFilteredData(), FUN=sum)
+    
+    DF <- getFilteredData()
+    # DF <- .gd(); DF <- DF[DF$Compound == "Triadimenol" & DF$ppmerror < 10, ]
+    
+    formula <- intensity ~ file.y * scan.y * fragmode * compound *  Group * mode *  nMs2 * nPredictedPeaks * master.intensity
+    
+    A.length <- aggregate(formula, data=DF, FUN=length)
     
     
-    A$score1 <- A$nAssignedPeaks / A$nPeaks
-    A$score2 <- A$nAssignedPeaks / A$nMs2
-    A$score3 <- A$intensity / A$master.intensity 
-    A[order(A$fragmode), ]
+    A.sum <- aggregate(formula, data=DF, FUN=sum)
+    A.sum$nAssignedPeaks <- A.length$intensity
+    
+    A.sum$score1 <- A.length$intensity / A.length$nPredictedPeaks
+    A.sum$score2 <- A.sum$nAssignedPeaks / A.sum$nMs2
+    A.sum$score3 <- A.sum$intensity / A.sum$master.intensity 
+    
+    #save(DF, A.sum, file="/tmp/ff.RData")
+    A.sum[order(A.sum$fragmode), ]
     
   })
+  
   output$tableScore <- renderTable({
-    
     getScoreTable()
-    
   })
   
   
@@ -155,6 +171,28 @@ shinyServer(function(input, output) {
     hist(A$score2)
     hist(A$score3)
   })
+  
+  
+  output$score1Plot <- renderPlot({
+    
+    A <- getScoreTable()
+    
+    
+    
+    gp <- ggplot(data = A,
+                 aes(x = factor(fragmode, levels = getLevels()),
+                     y = score1,
+                     fill=reorder(formula, mZ))) +
+      geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
+      scale_x_discrete(drop=FALSE) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      scale_fill_manual(values = cm) +
+      facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
+    
+    # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
+    gp
+  }, width=1000, height = 400)
+  
   
   
   getTableFreq <- reactive({
@@ -198,7 +236,9 @@ shinyServer(function(input, output) {
   }
   
   output$stackedBarChart <- renderPlot({
+    
     DF <- getAggregatedData()
+    
     n <- length(unique(DF$formula))
     
     cm <- gg_color_hue(n)
@@ -234,7 +274,7 @@ shinyServer(function(input, output) {
     
     # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
     gp
-  },width=1000,height = 400)
+  }, width=1000,height = 400)
   
   
   output$xyplot <- renderPlot({
@@ -264,7 +304,7 @@ shinyServer(function(input, output) {
   output$top3 <- renderPlot({
     lattice::xyplot(tic ~ master.intensity | fragmode * Compound,
                     #subset = Compound == "Triadimenol",
-                    group=fragmode,
+                    group=file.x,
                     data=getFilteredData())
   }, width=1000, height = 400)
 })

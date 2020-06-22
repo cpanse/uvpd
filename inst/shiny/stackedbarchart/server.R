@@ -38,15 +38,19 @@ shinyServer(function(input, output) {
     #Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
     Y <- e$X.top3.master.intensity.MS2
     Y <- merge(Y, pp, by.x='formula0', by.y='formula')
+    message(dim(X))
+    message(dim(Y))
     X$m <- paste(X$file, X$scan)
     Y$m <- paste(Y$file, Y$scan)
     XY <- base::merge(X, Y, by="m")
     
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
+    
+    message(dim(XY))
     XY
   }
-  
+  #---- getData ----
   getData <- reactive({
     message("GETDATA BEGIN")
     fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
@@ -67,6 +71,7 @@ shinyServer(function(input, output) {
     sort(unique(getThermoUVPD_feb2019()$`Cluster number`))
   })
   
+  #---- getFilteredData ----
   getFilteredData <- reactive({
     DF <- getData()
     if(input$removePC){
@@ -176,8 +181,6 @@ shinyServer(function(input, output) {
   output$score1Plot <- renderPlot({
     
     A <- getScoreTable()
-    
-    
     
     gp <- ggplot(data = A,
                  aes(x = factor(fragmode, levels = getLevels()),
@@ -303,8 +306,45 @@ shinyServer(function(input, output) {
   
   output$top3 <- renderPlot({
     lattice::xyplot(tic ~ master.intensity | fragmode * Compound,
-                    #subset = Compound == "Triadimenol",
+                    subset = Compound %in% input$compound,
                     group=file.x,
-                    data=getFilteredData())
+                    data=getData())
   }, width=1000, height = 400)
+  
+  #---- summary ----
+  
+  .summary <- function(){
+    DF <- getData()
+    DF.filtered <- getFilteredData()
+    
+    rv <- data.frame(
+      row.names=c("number of rawfiles", 
+                  "number of scans",
+                  "number of compounds",
+                  "length(unique($fragmode))"),
+      all = c(length(unique(DF$file.y)),
+              length(unique(paste(DF$scan.y, DF$file.y))),
+              length(unique(DF$Compound)),
+              length(unique(DF$fragmode))),
+      filtered = c(
+        length(unique(DF.filtered$file.y)),
+        length(unique(paste(DF.filtered$scan.y, DF$file.y))),
+        length(unique(DF.filtered$Compound)),
+        length(unique(DF.filtered$fragmode)))
+    )
+  }
+
+  
+  output$summary <- renderTable({ 
+    .summary()
+  }, rownames = TRUE)
+  
+  
+  #---- sessionInfo ----
+  
+  output$sessionInfo <- renderTable({
+    
+    capture.output(sessionInfo())
+  })
+  
 })

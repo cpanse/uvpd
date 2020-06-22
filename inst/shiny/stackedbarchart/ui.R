@@ -13,7 +13,7 @@ library(shiny)
 shinyUI(fluidPage(
     
     # Application title
-    titlePanel("Ultra HRMS in combination with UVPD fragments"),
+    titlePanel("On Analysing Ultraviolet Photodissociation Fragment Spectra"),
     
     # Sidebar with a slider input for number of bins
     sidebarLayout(
@@ -63,6 +63,10 @@ shinyUI(fluidPage(
             tabPanel("score", list(
                 column(width = 10,   
                        tableOutput('tableScore'),
+                ))),
+            tabPanel("summary", list(
+                column(width = 10,   
+                       tableOutput('summary'),
                 )))
             
         ) 

@@ -1,7 +1,7 @@
 Package: uvpd
 Type: Package
-Title: Ultraviolet Photodissociation
-Author: Christian Panse [cre, aut]
+Title: On Analyzing Ultraviolet Photodissociation Spectra 
+Author: Christian Panse [cre, aut], Andrea Brunner [ctb, aut]
 Maintainer: Christian Panse<cp@fgcz.ethz.ch>
 Version: 0.0.2
 Description: provides ... 
@@ -21,6 +21,6 @@ LazyData: TRUE
 Collate:
     uvpd.R
     zzz.R
-URL: https://github.com/cpanse/UVPD
+URL: https://github.com/cpanse/uvpd
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr

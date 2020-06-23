@@ -22,7 +22,7 @@ shinyUI(fluidPage(
                 htmlOutput('selectRData'),
                 htmlOutput('selectCompound'),
                 checkboxInput("removePC", "remove precursor items", value = FALSE, width = NULL),
-                selectInput("ppmerror", "ppm error cut-off",c(1, 5, 10, 15, 20, 50, 100), multiple = FALSE, selected = 10),
+                selectInput("ppmerror", "ppm error cut-off", c(1, 5, 10, 15, 20, 50, 100), multiple = FALSE, selected = 10),
                 htmlOutput('selectCluster')
             )),
         
@@ -44,7 +44,7 @@ shinyUI(fluidPage(
             tabPanel("error", list(
                 column(width = 10,       
                        plotOutput("distPlot"),
-                       tableOutput('tableFreq'),
+                       tableOutput('tableFreq')
                        
                 ))),
             tabPanel("ms2", list(
@@ -54,19 +54,19 @@ shinyUI(fluidPage(
             # plotOutput("barchart")
             tabPanel("matchen in-silico cluster table", list(
                 column(width = 10,   
-                       tableOutput('ThermoUVPD'),
+                       tableOutput('ThermoUVPD')
                 ))),
             tabPanel("data", list(
                 column(width = 10,   
-                       tableOutput('tableFilteredData'),
+                       tableOutput('tableFilteredData')
                 ))),
             tabPanel("score", list(
                 column(width = 10,   
-                       tableOutput('tableScore'),
+                       tableOutput('tableScore')
                 ))),
             tabPanel("summary", list(
                 column(width = 10,   
-                       tableOutput('summary'),
+                       tableOutput('summary')
                 )))
             
         ) 

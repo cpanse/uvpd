@@ -169,12 +169,14 @@ shinyServer(function(input, output) {
   
   output$scorePlot <- renderPlot({
     A <- getScoreTable()
+    score1 <- A[, c('fragmode', 'score1')] ; score1$score <-"score1"; names(score1) <- c('fragmode','value','score')
+    score2 <- A[, c('fragmode', 'score2')] ; score2$score <-"score2"; names(score2) <- c('fragmode','value','score')
+    score3 <- A[, c('fragmode', 'score3')] ; score3$score <-"score3"; names(score3) <- c('fragmode','value','score')
     
-    op <- par(mfrow=c(1, 3))
-    
-    hist(A$score1)
-    hist(A$score2)
-    hist(A$score3)
+    message("computing scores")
+    message(names(A))
+    #op <- par(mfrow=c(1, 3))
+    lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)), scales = "free",layout=c(1,3))
   })
   
   
@@ -265,18 +267,21 @@ shinyServer(function(input, output) {
   }, width=1000, height = 400)
   
   output$stackedBarChartGroup <- renderPlot({
-    
-    gp <- ggplot(data = getAggregatedClusterData(),
-                 aes(x = factor(fragmode, levels = getLevels()),
-                     y = log(intensity, 10),
-                     fill=reorder(formula, mZ))) +
-      geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
-      scale_x_discrete(drop=FALSE) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-      facet_wrap(~ compound , scales="free", drop=FALSE)
-    
-    # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
-    gp
+    if (nrow(getAggregatedClusterData()) > 0){
+      
+      
+      gp <- ggplot(data = getAggregatedClusterData(),
+                   aes(x = factor(fragmode, levels = getLevels()),
+                       y = log(intensity, 10),
+                       fill=reorder(formula, mZ))) +
+        geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
+        scale_x_discrete(drop=FALSE) +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+        facet_wrap(~ compound , scales="free", drop=FALSE)
+      
+      # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
+      gp }
+    else{''}
   }, width=1000,height = 400)
   
   

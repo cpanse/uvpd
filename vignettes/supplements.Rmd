@@ -196,7 +196,7 @@ RAWFILEDIR <- '/Users/cp/Downloads/p2722/'
             
             DF <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
             
-            # computed by MetFrag
+            # computed by MetFrag and stored in the uvpd package
             idx <- which(fragments.treeDepth1$SMILES == as.character(smile))
             insilico <- fragments.treeDepth1$ms2[[idx]]
             insilico <- insilico[!is.na(insilico$mZ),]

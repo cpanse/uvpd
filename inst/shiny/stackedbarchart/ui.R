@@ -69,6 +69,10 @@ shinyUI(fluidPage(
                 column(width = 10,   
                        tableOutput('tableScore')
                 ))),
+            tabPanel("in-silico", list(
+                column(width = 10,   
+                       tableOutput('tableinSilicoFragmentIon')
+                ))),
             tabPanel("summary", list(
                 column(width = 10,   
                        tableOutput('summary')

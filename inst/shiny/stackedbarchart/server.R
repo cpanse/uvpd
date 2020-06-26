@@ -19,17 +19,29 @@ shinyServer(function(input, output) {
                  multiple = FALSE, selected = 'uvpd_20200612.RData')
   })
   
+  output$selectFragmentsRData <- renderUI({
+    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData'),
+                multiple = FALSE, selected = 'uvpd_20200612.RData')
+  })
+  
+  
   output$selectCluster <- renderUI({
     selectInput("clusterid", "clusterid", getClsuterIds(),
                 multiple = FALSE, selected = getClsuterIds()[1])
   })
-
+  
+  getPredictedFragments <- reactive({
+    e <- new.env()
+    load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.20200625.RData"), envir = e)
+    e$fragments.treeDepth1
+  })
   
   # ease for debugging
   .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200612.RData')){
     e <- new.env()
     
-    load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.RData"), envir = e)
+    #load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.RData"), envir = e)
+    e$fragments.treeDepth1 <- getPredictedFragments()
     pp <- data.frame(formula = e$fragments.treeDepth1$formula,
                      nPredictedPeaks = sapply(e$fragments.treeDepth1$ms2, function(x){length(unique(x$mZ))}))
     
@@ -140,6 +152,10 @@ shinyServer(function(input, output) {
   })
   
   
+  
+  # score1: experimental fragments matched/ theoretically possible (@CP for new dataset)
+  # score2: experimental fragments matched/ all fragments in spectrum
+  # score3: experimental matched fragment intensities / master.intensity  
   getScoreTable <- reactive({
     
     DF <- getFilteredData()
@@ -338,10 +354,20 @@ shinyServer(function(input, output) {
         length(unique(DF.filtered$fragmode)))
     )
   }
-
-  
+  #---- in-silico predicted fragment ions ----
   output$summary <- renderTable({ 
     .summary()
+  }, rownames = TRUE)
+  
+  output$tableinSilicoFragmentIon <- renderTable({ 
+    formula=DF$`Bruto formula`[DF$Compound == input$compound]
+    
+    fragments <- getPredictedFragments()
+    
+    idx <- which(fragments$formula == formula)
+    
+    fragments$ms2[[idx]]
+    
   }, rownames = TRUE)
   
   

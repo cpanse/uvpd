@@ -73,7 +73,7 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   df.M2H1P$mZ <- df.MH1P$mZ + mH
   df.M2H1P$type <- "M2H1P"
   
-  df <- do.call('rbind', list(df, df.MH1P, df.M2H1P))
+  df <- do.call('rbind', list(df, df.M1P,  df.M1N, df.M1HN,  df.M2HN,  df.MH1P, df.M2H1P))
   
   
   # consider only mols having a weight of more than 50Da.

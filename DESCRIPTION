@@ -7,11 +7,11 @@ Version: 0.0.2
 Description: provides ... 
 Depends:
     R (>= 3.5),
-    protViz (>= 0.4)
+    protViz (>= 0.4),
+        rcdk (>= 3.4),
+    metfRag (>= 2.4)
 Suggest: knitr,
     rawDiag (>= 0.0.20),
-    rcdk (>= 3.4).
-    metfRag (>= 2.4),
     rmarkdown,
     readr,
     roxygen2,

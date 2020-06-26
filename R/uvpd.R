@@ -21,6 +21,10 @@
 getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   molecule <- parse.smiles(smiles)[[1]]
   
+  
+  me <- 0.00054858026 
+  mH <- 1.00782504
+  
   #calculate the fragments
   fragments <- frag.generateFragments(molecule, ...)
   
@@ -35,25 +39,41 @@ getFragments <-function(smiles="CC(C)(C)C(O)C(OC1=CC=C(Cl)C=C1)N1C=NC=N1", ...){
   mZ <- sapply(fragments, rcdk::get.exact.mass)
   
   df <- data.frame(mZ=mZ,
-                   type=rep('M1P', length(mZ)),
+                   type=rep('mZ', length(mZ)),
                    SMILES=as.character(sapply(fragments, rcdk::get.smiles)),
                    formula=as.character(sapply(fragments, function(x){rcdk::get.mol2formula(x)@string}))
                   )
- 
-  
   df <- unique(df)
   
+  df.M1P <- df
+  df.M1P$mZ <- df$mZ - me
+  df.M1P$type <- "M1P"
+  
+  
+  # M-
+  df.M1N <- df
+  df.M1N$mZ <-  df$mZ + me
+  df.M1N$type <- "M-"
+  
+  # M-H-
+  df.M1HN <- df
+  df.M1HN$mZ <- df$mZ - mH + me
+  df.M1HN$type <- "M-H-"
+  
+  # "M-2H-"
+  df.M2HN <- df
+  df.M2HN$mZ <- df$mZ - mH -mH + me
+  df.M2HN$type <- "M-2H-"
+    
   df.MH1P <- df
-  df.MH1P$mZ <- df$mZ  + 1.00727646677
+  df.MH1P$mZ <- df$mZ + mH - me
   df.MH1P$type <- "MH1P"
   
-  
-  
   df.M2H1P <- df.MH1P
-  df.M2H1P$mZ <- df.MH1P$mZ + 1.00782504
+  df.M2H1P$mZ <- df.MH1P$mZ + mH
   df.M2H1P$type <- "M2H1P"
   
-  df <- do.call('rbind', list(df, df.MH1P, df.M2H1P))
+  df <- do.call('rbind', list(df, df.M1P,  df.M1N, df.M1HN,  df.M2HN,  df.MH1P, df.M2H1P))
   
   
   # consider only mols having a weight of more than 50Da.

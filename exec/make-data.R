@@ -18,17 +18,17 @@ makeFragments <- function(){
         SMILES = ThermoUVPD_feb2019$SMILES[idx],
         formula = ThermoUVPD_feb2019$MOLECULAR_FORMULA[idx],
         mass = ThermoUVPD_feb2019$MONOISOTOPIC_MASS_1[idx],
-        ms2 = lapply(ThermoUVPD_feb2019$SMILES[idx], getFragments, treeDepth=1)
+        ms2 = lapply(ThermoUVPD_feb2019$SMILES[idx], uvpd:::getFragments, treeDepth=1)
     )
     
     fragments.treeDepth2 <- list(
         SMILES = ThermoUVPD_feb2019$SMILES[idx],
         formula = ThermoUVPD_feb2019$MOLECULAR_FORMULA[idx],
         mass = ThermoUVPD_feb2019$MONOISOTOPIC_MASS_1[idx],
-        ms2=lapply(ThermoUVPD_feb2019$SMILES, getFragments, treeDepth=2)
+        ms2 = lapply(ThermoUVPD_feb2019$SMILES, uvpd:::getFragments, treeDepth=2)
     )
    
-    save(fragments.treeDepth1,  fragments.treeDepth2,  file="fragments.RData", compression_level = 9)  
+    save(fragments.treeDepth1,  fragments.treeDepth2,  file="fragments.20200625.RData", compression_level = 9)  
 }
 
 summary.analyze.uvpd <- function(S, group="Castell"){

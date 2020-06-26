@@ -15,8 +15,8 @@ library(DT)
 shinyServer(function(input, output) {
   
   output$selectRData <- renderUI({
-    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData'),
-                 multiple = FALSE, selected = 'uvpd_20200612.RData')
+    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData', 'uvpd_20200626.RData'),
+                 multiple = FALSE, selected = 'uvpd_20200626.RData')
   })
   
   output$selectFragmentsRData <- renderUI({
@@ -37,7 +37,7 @@ shinyServer(function(input, output) {
   })
   
   # ease for debugging
-  .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200612.RData')){
+  .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200626.RData')){
     e <- new.env()
     
     #load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.RData"), envir = e)
@@ -50,8 +50,11 @@ shinyServer(function(input, output) {
     #Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
     Y <- e$X.top3.master.intensity.MS2
     Y <- merge(Y, pp, by.x='formula0', by.y='formula')
+    message("DEBUG")
     message(dim(X))
     message(dim(Y))
+    X$file <- X$filename
+    
     X$m <- paste(X$file, X$scan)
     Y$m <- paste(Y$file, Y$scan)
     XY <- base::merge(X, Y, by="m")
@@ -360,6 +363,8 @@ shinyServer(function(input, output) {
   }, rownames = TRUE)
   
   output$tableinSilicoFragmentIon <- renderTable({ 
+    DF <- getThermoUVPD_feb2019()
+    
     formula=DF$`Bruto formula`[DF$Compound == input$compound]
     
     fragments <- getPredictedFragments()

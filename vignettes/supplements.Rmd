@@ -118,7 +118,7 @@ X.top3.tic <- do.call('rbind', lapply(cc, function(m){
 
 ```{r eval=FALSE}
 table(X.top3.master.intensity$file)
-table(X.top3.master.intensity$SMILES.x)
+table(X.top3.master.intensity$SMILES)
 table(X.top3.master.intensity$fragmode)
 ```
 

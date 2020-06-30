@@ -1,26 +1,18 @@
 Package: uvpd
 Type: Package
-Title: On Analyzing Ultraviolet Photodissociation Spectra 
+Title: On Analyzing Ultraviolet Photodissociation Spectra
 Author: Christian Panse [cre, aut], Andrea Brunner [ctb, aut]
 Maintainer: Christian Panse<cp@fgcz.ethz.ch>
-Version: 0.0.3
+Version: 0.0.2
 Description: provides ... 
-Depends:
-    R (>= 3.5),
-    protViz (>= 0.4),
-    rcdk (>= 3.4),
-    metfRag (>= 2.4)
-Suggest: knitr,
-    rawDiag (>= 0.0.20),
-    rmarkdown,
-    readr,
-    roxygen2,
-    testthat
+Depends: R (>= 3.5), protViz (>= 0.4)
+Suggest: knitr, rawDiag (>= 0.0.20), rmarkdown, readr, roxygen2, rcdk
+        (>= 3.4), metfRag (>= 2.4), testthat
 License: GPL
 LazyData: TRUE
-Collate:
-    uvpd.R
-    zzz.R
+Collate: uvpd.R zzz.R
 URL: https://github.com/cpanse/uvpd
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
+NeedsCompilation: no
+Packaged: 2020-06-26 08:17:41 UTC; cp

@@ -43,8 +43,9 @@ shinyServer(function(input, output) {
   .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200626.RData')){
     e <- new.env()
     
-    #load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.RData"), envir = e)
-    e$fragments.treeDepth1 <- getPredictedFragments()
+    
+    load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.20200625.RData"), envir = e)
+    #e$fragments.treeDepth1 <- getPredictedFragments()
     pp <- data.frame(formula = e$fragments.treeDepth1$formula,
                      nPredictedPeaks = sapply(e$fragments.treeDepth1$ms2, function(x){length(unique(x$mZ))}))
     
@@ -103,12 +104,15 @@ shinyServer(function(input, output) {
     
     if (input$negativeIonType){
       message("negative mode")
-      DF[DF$type %in% negativeIonTypePattern, ]
+      DF <- DF[DF$type %in% negativeIonTypePattern, ]
     }
     else{
       message("positive mode")
-      DF[DF$type %in% positiveIonTypePattern, ]
+      DF <- DF[DF$type %in% positiveIonTypePattern, ]
     }
+    
+    drops <- c("SMILES", "file.x", "m")
+    unique(DF[, !(names(DF) %in% drops)])
     
   })
   
@@ -373,7 +377,7 @@ shinyServer(function(input, output) {
   output$top3 <- renderPlot({
     lattice::xyplot(tic ~ master.intensity | fragmode * Compound,
                     subset = Compound %in% input$compound,
-                    group=file.x,
+                    group=file.y,
                     data=getData())
   }, width=1000, height = 400)
   

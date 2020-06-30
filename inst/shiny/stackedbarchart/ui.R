@@ -22,6 +22,7 @@ shinyUI(fluidPage(
                 htmlOutput('selectRData'),
                 htmlOutput('selectCompound'),
                 checkboxInput("removePC", "remove precursor items", value = FALSE, width = NULL),
+                checkboxInput("negativeIonType", "negative/positive ion type", value = FALSE, width = NULL),
                 selectInput("ppmerror", "ppm error cut-off", c(1, 5, 10, 15, 20, 50, 100), multiple = FALSE, selected = 10),
                 htmlOutput('selectCluster')
             )),
@@ -38,6 +39,7 @@ shinyUI(fluidPage(
                        plotOutput("scorePlot"),
                        htmlOutput("stackedBarChartText"),
                        plotOutput("stackedBarChart"),
+                       plotOutput("stackedBarChartIonType"),
                        plotOutput("top3"),
                        plotOutput("bwplot")
                 ))),

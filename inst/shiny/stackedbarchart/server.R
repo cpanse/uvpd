@@ -11,6 +11,9 @@ library(shiny)
 library(ggplot2)
 library(DT)
 
+negativeIonTypePattern <- c("M-", "M-2H-", "M-H-")
+positiveIonTypePattern <- c("M1P", "M2H1P",  "MH1P")
+
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
@@ -96,7 +99,17 @@ shinyServer(function(input, output) {
       DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
     }
 
-    DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+    DF <- DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+    
+    if (input$negativeIonType){
+      message("negative mode")
+      DF[DF$type %in% negativeIonTypePattern, ]
+    }
+    else{
+      message("positive mode")
+      DF[DF$type %in% positiveIonTypePattern, ]
+    }
+    
   })
   
   getFormulaPC <- reactive({
@@ -118,7 +131,7 @@ shinyServer(function(input, output) {
   })
   
   getAggregatedData <- reactive({
-    DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode,
+    DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode * type,
               data=getFilteredData(), FUN=sum)
     
 
@@ -155,7 +168,7 @@ shinyServer(function(input, output) {
   })
   
   
-  
+  #---- score ----
   # score1: experimental fragments matched/ theoretically possible (@CP for new dataset)
   # score2: experimental fragments matched/ all fragments in spectrum
   # score3: experimental matched fragment intensities / master.intensity  
@@ -195,8 +208,9 @@ shinyServer(function(input, output) {
     message("computing scores")
     message(names(A))
     #op <- par(mfrow=c(1, 3))
-    lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)), scales = "free",layout=c(1,3))
-  })
+    lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)),
+                     scales = "free", layout=c(1,3), index.cond = list(rev(1:3)))
+  } , width=1000)
   
   
   output$score1Plot <- renderPlot({
@@ -259,6 +273,34 @@ shinyServer(function(input, output) {
     hcl(h = hues, l = 65, c = 100)[1:n]
   }
   
+  #---- stacked barchart ion type
+  output$stackedBarChartIonType <- renderPlot({
+    
+    DF <- getAggregatedData()
+    
+    n <- length(unique(DF$formula))
+    
+    cm <- gg_color_hue(n)
+    if (getFormulaPC() %in% as.character(DF$formula)){
+      cm <- c(gg_color_hue(n-1),'grey')
+    }
+    
+    
+    gp <- ggplot(data = DF,
+                 aes(x = factor(fragmode, levels = getLevels()),
+                     y = log(intensity, 10),
+                     fill=reorder(type, mZ))) +
+      geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
+      scale_x_discrete(drop=FALSE) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      scale_fill_manual(values = cm) +
+      facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
+    
+    # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
+    gp
+  }, width=1000, height = 400)
+  
+  #---- stacked barchart fragment ion----
   output$stackedBarChart <- renderPlot({
     
     DF <- getAggregatedData()

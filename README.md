@@ -67,6 +67,14 @@ pkgs <- pkgs[(!pkgs %in% unique(installed.packages()[,'Package']))]
 if(length(pkgs) > 0){install.packages(pkgs)}
 
 install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.2.tar.gz',repos=NULL)
+
+```
+
+### run shiny application
+
+<img src="https://user-images.githubusercontent.com/4901987/86088690-19994000-baa7-11ea-8644-f679470afd8e.png" align="right" width="100px" />
+
+```{r}
 shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 ```
 

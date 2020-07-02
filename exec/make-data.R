@@ -83,8 +83,10 @@ make_shiny <- function(){
     load(file.path(system.file(package = 'uvpd'), "/extdata/X20200612.RData"))
     X20200612 <- X20200612_uvpd
     
-    X <- X20200612[!(X20200612$Compound=="4-Chlorobenzoic acid"), ]
+    #X <- X20200612[!(X20200612$Compound=="4-Chlorobenzoic acid" & !grepl("KWR", X20200612$file) & X20200612$Group != "noFrag" ), ]
     
+    X20200612$file <- X20200612$filename
+    X <-  X20200612
     cc <- expand.grid(as.character(unique(X$file)), as.character(unique(X$SMILES)), as.character(unique(X$fragmode)))
     names(cc) <- c('file', 'SMILES', 'fragmode')
     cc <- paste(cc$file, cc$SMILES, cc$fragmode)
@@ -105,6 +107,16 @@ make_shiny <- function(){
         else{return(NULL)}
     }))
     
+
+
+    table(t<-table(paste(X.top3.master.intensity$scan, X.top3.master.intensity$file, X.top3.master.intensity$Compound))>1)
+    X.top3.master.intensity <- X.top3.master.intensity[!(X.top3.master.intensity$Compound == "4-Chlorobenzoic acid" & grepl("stds_pos", X.top3.master.intensity$file)), ]
+    X.top3.master.intensity <- X.top3.master.intensity[!(X.top3.master.intensity$Compound == "4-Chlorobenzoic acid" & X.top3.master.intensity$Group == "noFrag"), ]
+    table(t<-table(paste(X.top3.master.intensity$scan, X.top3.master.intensity$file, X.top3.master.intensity$Compound))>1)
+
+
+    # sanity check
+    # t<-table(paste(X.top3.master.intensity$scan, X.top3.master.intensity$file, X.top3.master.intensity$Compound))
    
     load(file.path(system.file(package = 'uvpd'), "/extdata/fragments.20200625.RData"))
     
@@ -116,6 +128,7 @@ make_shiny <- function(){
     
     RAWFILEDIR <- '/export/03c3e7cc-5661-4600-94fa-116ccb424918/p2722'
     
+    absoluteErrorCutOffInDalton <- 0.01; centroid <- TRUE
     .fragmentMatch <- function(absoluteErrorCutOffInDalton=0.01, centroid=TRUE){
         lapply(sort(unique(X.top3.master.intensity$file)), function(f){
             sn <- X.top3.master.intensity$scan[X.top3.master.intensity$file==f]
@@ -128,6 +141,7 @@ make_shiny <- function(){
             rv <- mapply(function(scan, smile, compound){
                 mZ <- x$GetSpectrumMasses(scan)
                 intensity <- x$GetSpectrumIntensities(scan)
+		message(paste("scan", scan))
                 
                 if (centroid){
                     cc <- protViz::centroid(mZ, intensity)
@@ -138,7 +152,7 @@ make_shiny <- function(){
                 DF <- data.frame(mZ=cc$mZ, intensity=cc$intensity)
                 
                 # computed by MetFrag and stored in the uvpd package
-                idx <- which(fragments.treeDepth1$SMILES == as.character(smile))
+                idx <- which(fragments.treeDepth1$SMILES == as.character(smile))[1]
                 insilico <- fragments.treeDepth1$ms2[[idx]]
                 insilico <- insilico[!is.na(insilico$mZ),]
                 
@@ -171,6 +185,6 @@ make_shiny <- function(){
     }
     
     X.top3.master.intensity.MS2 <-do.call('rbind', .fragmentMatch(absoluteErrorCutOffInDalton=1.0))
-    save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200626.RData", compression_level = 9)
+    save(X.top3.master.intensity, X.top3.master.intensity.MS2, file="uvpd.20200702.RData", compression_level = 9)
 }
 

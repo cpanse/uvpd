@@ -18,8 +18,8 @@ positiveIonTypePattern <- c("M1P", "M2H1P",  "MH1P")
 shinyServer(function(input, output) {
   
   output$selectRData <- renderUI({
-    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData', 'uvpd_20200626.RData'),
-                 multiple = FALSE, selected = 'uvpd_20200626.RData')
+    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData', 'uvpd_20200626.RData', 'uvpd_20200702.RData'),
+                 multiple = FALSE, selected = 'uvpd_20200702.RData')
   })
   
   output$selectFragmentsRData <- renderUI({

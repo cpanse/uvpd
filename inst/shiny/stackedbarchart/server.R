@@ -121,6 +121,7 @@ shinyServer(function(input, output) {
     formula.pc <- META[META$Compound %in% input$compound, 2]
     formula.pc
   })
+  
   getFilteredClusterData <- reactive({
     DF <- getData()
     if(input$removePC){
@@ -131,7 +132,20 @@ shinyServer(function(input, output) {
     S <- getThermoUVPD_feb2019()
     
     compound <- unique(S$Compound[S$`Cluster number` == input$clusterid])
-    DF[DF$compound %in% compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+    DF <- DF[DF$compound %in% compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+    
+    if (input$negativeIonType){
+      message("negative mode")
+      DF <- DF[DF$type %in% negativeIonTypePattern, ]
+    }
+    else{
+      message("positive mode")
+      DF <- DF[DF$type %in% positiveIonTypePattern, ]
+    }
+    
+    drops <- c("SMILES", "file.x", "m")
+    unique(DF[, !(names(DF) %in% drops)])
+    
   })
   
   getAggregatedData <- reactive({
@@ -424,7 +438,7 @@ shinyServer(function(input, output) {
   
   #---- sessionInfo ----
   
-  output$sessionInfo <- renderTable({
+  output$sessionInfo <- renderPrint({
     
     capture.output(sessionInfo())
   })

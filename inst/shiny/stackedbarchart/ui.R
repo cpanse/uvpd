@@ -78,7 +78,8 @@ shinyUI(fluidPage(
             tabPanel("summary", list(
                 column(width = 10,   
                        tableOutput('summary')
-                )))
+                ))),
+            tabPanel("Session Info", verbatimTextOutput("sessionInfo"))
             
         ) 
         )

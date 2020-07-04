@@ -192,7 +192,7 @@ shinyServer(function(input, output) {
   # score3: experimental matched fragment intensities / master.intensity  
   getScoreTable <- reactive({
     
-    DF <- getFilteredData()
+    DF <- getData()
     # DF <- .gd(); DF <- DF[DF$Compound == "Triadimenol" & DF$ppmerror < 10, ]
     
     formula <- intensity ~ file.y * scan.y * fragmode * compound *  Group * mode *  nMs2 * nPredictedPeaks * master.intensity
@@ -208,30 +208,65 @@ shinyServer(function(input, output) {
     A.sum$score3 <- A.sum$intensity / A.sum$master.intensity 
     
     #save(DF, A.sum, file="/tmp/ff.RData")
-    A.sum[order(A.sum$fragmode), ]
-    
+    DF<-A.sum[order(A.sum$fragmode), c('compound', 'mode', 'fragmode', 'score1', 'score2', 'score3')]
+    #save(DF, file="/tmp/score.RData")
+    DF
   })
   
-  output$tableScore <- renderTable({
-    getScoreTable()
+  output$tableScore <- DT::renderDT({
+    datatable(getScoreTable())
   })
   
   
   output$scorePlot <- renderPlot({
     A <- getScoreTable()
-    score1 <- A[, c('fragmode', 'score1')] ; score1$score <-"score1"; names(score1) <- c('fragmode','value','score')
-    score2 <- A[, c('fragmode', 'score2')] ; score2$score <-"score2"; names(score2) <- c('fragmode','value','score')
-    score3 <- A[, c('fragmode', 'score3')] ; score3$score <-"score3"; names(score3) <- c('fragmode','value','score')
+    A <- A[A$compound %in% input$compound, ]
     
-    message("computing scores")
-    message(names(A))
-    #op <- par(mfrow=c(1, 3))
-    lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)),
-                     scales = "free", layout=c(1,3), index.cond = list(rev(1:3)))
+    if (input$negativeIonType){
+      message("negative mode")
+      A <- A[A$mode < 0, ]
+    }
+    else{
+      message("positive mode")
+      A <- A[A$mode > 0, ]
+    }
+    if(nrow(A) > 1){
+      score1 <- A[, c('fragmode', 'score1')] ; score1$score <-"score1"; names(score1) <- c('fragmode','value','score')
+      score2 <- A[, c('fragmode', 'score2')] ; score2$score <-"score2"; names(score2) <- c('fragmode','value','score')
+      score3 <- A[, c('fragmode', 'score3')] ; score3$score <-"score3"; names(score3) <- c('fragmode','value','score')
+      
+      message("computing scores")
+      message(names(A))
+      #op <- par(mfrow=c(1, 3))
+      
+      
+      lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)),
+                       scales = "free", layout=c(1,3), index.cond = list(rev(1:3)))
+    }else{
+      plot(0,0, type='n', axes=FALSE);text(0,0, "no meaningful data", cex=3)
+    }
   } , width=1000)
   
-  
   output$score1Plot <- renderPlot({
+    lattice::xyplot(score1 ~ as.factor(fragmode) | mode, group=compound,
+                    #auto.key = list(space = "right"),
+                    data=getScoreTable(), type='b', layout=c(1,2))
+  } , width=1000)
+  
+  output$score2Plot <- renderPlot({
+     lattice::xyplot(score2 ~ as.factor(fragmode) | mode, group=compound,
+                     #auto.key = list(space = "right"),
+                     data=getScoreTable(), type='b', layout=c(1,2))
+  } , width=1000)
+  
+  output$score3Plot <- renderPlot({
+    lattice::xyplot(score3 ~ as.factor(fragmode) | mode, group=compound,
+                    auto.key = list(space = "right"),
+                    data=getScoreTable(), type='b', layout=c(1,2))
+  } , width=1000, height = 640)
+  
+  
+  output$scorePlot11 <- renderPlot({
     
     A <- getScoreTable()
     

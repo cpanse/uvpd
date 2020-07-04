@@ -182,11 +182,11 @@ shinyServer(function(input, output) {
   
   output$distPlot <- renderPlot({
     par(mfrow=c(2, 2))
-    hist(getFilteredData()$ppmerror, main=input$ppmerror)
+    hist(getFilteredData()$ppmerror)
     hist(abs(getFilteredData()$eps))
     
     if(require(MASS)){
-      hist(getFilteredData()$ppmerror, main=input$ppmerror, probability = TRUE)
+      hist(getFilteredData()$ppmerror, probability = TRUE)
       fit <- fitdistr(getFilteredData()$ppmerror, densfun="normal")
       curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
       
@@ -207,6 +207,9 @@ shinyServer(function(input, output) {
   getScoreTable <- reactive({
     
     DF <- getData()
+    filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
+    DF <- DF[filter, ]
+    
     # DF <- .gd(); DF <- DF[DF$Compound == "Triadimenol" & DF$ppmerror < 10, ]
     
     formula <- intensity ~ file.y * scan.y * fragmode * compound *  Group * mode *  nMs2 * nPredictedPeaks * master.intensity
@@ -222,10 +225,22 @@ shinyServer(function(input, output) {
     A.sum$score3 <- A.sum$intensity / A.sum$master.intensity 
     
     #save(DF, A.sum, file="/tmp/ff.RData")
-    DF<-A.sum[order(A.sum$fragmode), c('compound', 'mode', 'fragmode', 'score1', 'score2', 'score3')]
+    DF <- A.sum[order(A.sum$compound, A.sum$fragmode), c('compound', 'file.y', 'scan.y','mode', 'fragmode', 'score1', 'score2', 'score3')]
     #save(DF, file="/tmp/score.RData")
     DF
   })
+  
+  # Downloadable csv of selected dataset ----
+  output$downloadScores <- downloadHandler(
+    filename = function() {
+      paste("uvpd-shiny-application-scores", ".csv", sep = "")
+    },
+    content = function(file) {
+      
+      write.csv(getScoreTable(), file, row.names = FALSE)
+    }
+  )
+  
   
   getFilteredScoreTable <- reactive({
     

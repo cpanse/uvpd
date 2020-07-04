@@ -181,23 +181,37 @@ shinyServer(function(input, output) {
   })
   
   output$distPlot <- renderPlot({
-    par(mfrow=c(2, 2))
-    hist(getFilteredData()$ppmerror)
-    hist(abs(getFilteredData()$eps))
+    par(mfrow=c(3, 2))
+    hist(getFilteredData()$ppmerror, sub=input$compound)
+    hist(abs(getFilteredData()$eps), sub=input$compound)
     
     if(require(MASS)){
-      hist(getFilteredData()$ppmerror, probability = TRUE)
+      hist(getFilteredData()$ppmerror, probability = TRUE, sub=input$compound)
       fit <- fitdistr(getFilteredData()$ppmerror, densfun="normal")
       curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
       
-      hist(abs(getFilteredData()$eps), probability = TRUE)
+      hist(abs(getFilteredData()$eps), probability = TRUE, sub=input$compound)
       fit <- fitdistr(abs(getFilteredData()$eps), densfun="normal")
       curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
     }
     
+    if(require(MASS)){
+      
+      DF <- getData()
+      filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
+      DF <- DF[filter, ]
+      
+      hist(DF$ppmerror, probability = TRUE, sub='all compunds')
+      fit <- fitdistr(DF$ppmerror, densfun="normal")
+      curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
+      
+      hist(abs(DF$eps), probability = TRUE, sub='all compunds')
+      fit <- fitdistr(abs(DF$eps), densfun="normal")
+      curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
+    }
     
     return
-  })
+  }, height=600)
   
   
   #---- score ----
@@ -209,8 +223,6 @@ shinyServer(function(input, output) {
     DF <- getData()
     filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
     DF <- DF[filter, ]
-    
-    # DF <- .gd(); DF <- DF[DF$Compound == "Triadimenol" & DF$ppmerror < 10, ]
     
     formula <- intensity ~ file.y * scan.y * fragmode * compound *  Group * mode *  nMs2 * nPredictedPeaks * master.intensity
     

@@ -73,7 +73,13 @@ shinyUI(fluidPage(
                 ))),
             tabPanel("score", list(
                 column(width = 10,   
-                       tableOutput('tableScore')
+                       DT::DTOutput('tableScore')
+                ))),
+            tabPanel("scorePlot", list(
+                column(width = 10,   
+                       plotOutput("score1Plot"),
+                       plotOutput("score2Plot"),
+                       plotOutput("score3Plot")
                 ))),
             tabPanel("in-silico", list(
                 column(width = 10,   

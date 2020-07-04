@@ -100,7 +100,7 @@ shinyServer(function(input, output) {
       DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
     }
 
-    DF <- DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+    DF <- DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror) & abs(DF$eps) < as.numeric(input$epserror), ]
     
     if (input$negativeIonType){
       message("negative mode")
@@ -132,7 +132,7 @@ shinyServer(function(input, output) {
     S <- getThermoUVPD_feb2019()
     
     compound <- unique(S$Compound[S$`Cluster number` == input$clusterid])
-    DF <- DF[DF$compound %in% compound & DF$ppmerror < as.numeric(input$ppmerror), ]
+    DF <- DF[DF$compound %in% compound & DF$ppmerror < as.numeric(input$ppmerror) & abs(DF$eps) < as.numeric(input$epserror), ]
     
     if (input$negativeIonType){
       message("negative mode")
@@ -363,7 +363,13 @@ shinyServer(function(input, output) {
     else{''}
   }, width=1000,height = 400)
   
+  #------- ms2 -------
   
+  output$tableMS2 <- DT::renderDataTable({ 
+    DF <- getFilteredData()
+    
+    DF[, c('mZ', 'intensity', 'formula', 'compound', 'type',	'eps', 	'ppmerror', 'scan.y', 'fragmode')]
+  })
   output$xyplot <- renderPlot({
     lattice::xyplot(intensity ~ mZ | fragmode, 
                     group=paste(file.y, scan.y),

@@ -100,7 +100,9 @@ shinyServer(function(input, output) {
       DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
     }
 
-    DF <- DF[DF$compound %in% input$compound & DF$ppmerror < as.numeric(input$ppmerror) & abs(DF$eps) < as.numeric(input$epserror), ]
+    
+    filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
+    DF <- DF[DF$compound %in% input$compound & filter, ]
     
     if (input$negativeIonType){
       message("negative mode")
@@ -179,9 +181,21 @@ shinyServer(function(input, output) {
   })
   
   output$distPlot <- renderPlot({
-    par(mfrow=c(1, 2))
+    par(mfrow=c(2, 2))
     hist(getFilteredData()$ppmerror, main=input$ppmerror)
-    hist(getFilteredData()$eps)
+    hist(abs(getFilteredData()$eps))
+    
+    if(require(MASS)){
+      hist(getFilteredData()$ppmerror, main=input$ppmerror, probability = TRUE)
+      fit <- fitdistr(getFilteredData()$ppmerror, densfun="normal")
+      curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
+      
+      hist(abs(getFilteredData()$eps), probability = TRUE)
+      fit <- fitdistr(abs(getFilteredData()$eps), densfun="normal")
+      curve(dnorm(x, fit$estimate[1], fit$estimate[2]), col="red", lwd=2, add=T)
+    }
+    
+    
     return
   })
   
@@ -213,14 +227,35 @@ shinyServer(function(input, output) {
     DF
   })
   
+  getFilteredScoreTable <- reactive({
+    
+    DF <- getFilteredData()
+    
+    formula <- intensity ~ file.y * scan.y * fragmode * compound *  Group * mode *  nMs2 * nPredictedPeaks * master.intensity
+    
+    A.length <- aggregate(formula, data=DF, FUN=length)
+    
+    
+    A.sum <- aggregate(formula, data=DF, FUN=sum)
+    A.sum$nAssignedPeaks <- A.length$intensity
+    
+    A.sum$score1 <- A.length$intensity / A.length$nPredictedPeaks
+    A.sum$score2 <- A.sum$nAssignedPeaks / A.sum$nMs2
+    A.sum$score3 <- A.sum$intensity / A.sum$master.intensity 
+    
+    
+    DF<-A.sum[order(A.sum$fragmode), c('compound', 'mode', 'fragmode', 'score1', 'score2', 'score3')]
+   
+    DF
+  })
+  
   output$tableScore <- DT::renderDT({
     datatable(getScoreTable())
   })
   
   
   output$scorePlot <- renderPlot({
-    A <- getScoreTable()
-    A <- A[A$compound %in% input$compound, ]
+    A <- getFilteredScoreTable()
     
     if (input$negativeIonType){
       message("negative mode")
@@ -235,11 +270,7 @@ shinyServer(function(input, output) {
       score2 <- A[, c('fragmode', 'score2')] ; score2$score <-"score2"; names(score2) <- c('fragmode','value','score')
       score3 <- A[, c('fragmode', 'score3')] ; score3$score <-"score3"; names(score3) <- c('fragmode','value','score')
       
-      message("computing scores")
-      message(names(A))
-      #op <- par(mfrow=c(1, 3))
-      
-      
+
       lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)),
                        scales = "free", layout=c(1,3), index.cond = list(rev(1:3)))
     }else{
@@ -404,7 +435,7 @@ shinyServer(function(input, output) {
     DF <- getFilteredData()
     
     DF[, c('mZ', 'intensity', 'formula', 'compound', 'type',	'eps', 	'ppmerror', 'scan.y', 'fragmode')]
-  })
+  }, options=list(pageLength = 25))
   output$xyplot <- renderPlot({
     lattice::xyplot(intensity ~ mZ | fragmode, 
                     group=paste(file.y, scan.y),

@@ -73,7 +73,13 @@ shinyServer(function(input, output) {
   getData <- reactive({
     message("GETDATA BEGIN")
     fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
-    unique(.gd(fn))
+    
+    #M <- M[, c("Compound", "Cas nr")]
+    DF <- unique(.gd(fn))
+    #DF<-unique(merge(DF, M, by="Compound"))
+    #message("GETDATA END")
+    DF
+    
   })
   
   
@@ -82,8 +88,8 @@ shinyServer(function(input, output) {
     fn <- file.path(system.file(package = 'uvpd'), "extdata/ThermoUVPD_feb2019.csv")
     ThermoUVPD_feb2019 <- read_csv(fn, na = c("", "#N/A"))
     
-    ThermoUVPD_feb2019[ThermoUVPD_feb2019$Compound %in% getData()$Compound,
-                       c("Compound", "Bruto formula", "Cluster number", "Group")]
+    DF <- ThermoUVPD_feb2019[, c("Compound", "Bruto formula", "Cluster number", "Group", "Cas nr")]
+    DF[ThermoUVPD_feb2019$Compound %in% getData()$Compound, ]
   })
   
   getClsuterIds <- reactive({
@@ -165,7 +171,11 @@ shinyServer(function(input, output) {
   
   getLevels <- reactive({
     DF <- getData()
+    if(nrow(DF)>0){
+      
+    
     sort(unique(DF$fragmode))
+    }else{NULL}
   })
   
   getCompound <-  reactive({
@@ -224,7 +234,7 @@ shinyServer(function(input, output) {
     filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
     DF <- DF[filter, ]
     
-    formula <- intensity ~ file.y * scan.y * fragmode * compound *  Group * mode *  nMs2 * nPredictedPeaks * master.intensity
+    formula <- intensity ~ file.y * scan.y * fragmode * compound *  formula0 * mode *  nMs2 * nPredictedPeaks * master.intensity
     
     A.length <- aggregate(formula, data=DF, FUN=length)
     
@@ -237,9 +247,12 @@ shinyServer(function(input, output) {
     A.sum$score3 <- A.sum$intensity / A.sum$master.intensity 
     
     #save(DF, A.sum, file="/tmp/ff.RData")
-    DF <- A.sum[order(A.sum$compound, A.sum$fragmode), c('compound', 'file.y', 'scan.y','mode', 'fragmode', 'score1', 'score2', 'score3')]
+    DF <- A.sum[order(A.sum$compound, A.sum$fragmode),
+                c('compound', 'formula0', 'file.y', 'scan.y','mode', 'fragmode', 'nMs2', 'nPredictedPeaks', 'master.intensity','score1', 'score2', 'score3')]
     #save(DF, file="/tmp/score.RData")
-    DF
+    M<-getThermoUVPD_feb2019()[, c("Compound", "Cas nr")]
+    DF <- merge(M, DF, by.y='compound', by.x="Compound")
+    unique(DF)
   })
   
   # Downloadable csv of selected dataset ----
@@ -405,7 +418,7 @@ shinyServer(function(input, output) {
       scale_x_discrete(drop=FALSE) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       scale_fill_manual(values = cm) +
-      facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
+      facet_wrap(~ compound * mode, scales="free", drop=FALSE)
     
     # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
     gp
@@ -432,7 +445,7 @@ shinyServer(function(input, output) {
       scale_x_discrete(drop=FALSE) +
       theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
       scale_fill_manual(values = cm) +
-      facet_wrap(~ compound * Group * mode, scales="free", drop=FALSE)
+      facet_wrap(~ compound * mode, scales="free", drop=FALSE)
     
     # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
     gp
@@ -488,10 +501,14 @@ shinyServer(function(input, output) {
   }, width=1000, height=1000)
   
   output$top3 <- renderPlot({
-    lattice::xyplot(tic ~ master.intensity | fragmode * Compound,
-                    subset = Compound %in% input$compound,
-                    group=file.y,
-                    data=getData())
+    if (nrow(getData())>0){
+      
+      
+      lattice::xyplot(tic ~ master.intensity | fragmode * Compound,
+                      subset = Compound %in% input$compound,
+                      group=file.y,
+                      data=getData())
+    }else{NULL}
   }, width=1000, height = 400)
   
   #---- summary ----

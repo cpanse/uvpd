@@ -66,8 +66,13 @@ shinyServer(function(input, output) {
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
     
+    dd.compound <- c('4-Nitrocatechol', '2-Nitrohydroquinone', '4-Nitro-1,3-benzenediol',
+            '2-Hydroxy-3-nitrobenzoic acid', '4-Hydroxy-3-nitrobenz',
+            '2-Hydroxy-5-nitrobenzoic acid')
+    
+    dd.formula0 <- c('C7H5NO5')
     message(dim(XY))
-    XY
+    XY[!(XY$compound %in% dd.compound | XY$formula0 %in% dd.formula0), ]
   }
   #---- getData ----
   getData <- reactive({
@@ -433,7 +438,7 @@ shinyServer(function(input, output) {
     
     cm <- gg_color_hue(n)
     if (getFormulaPC() %in% as.character(DF$formula)){
-      cm <- c(gg_color_hue(n-1),'grey')
+      cm <- c(gg_color_hue(n-1), 'grey')
     }
     
     

@@ -13,7 +13,7 @@ library(shiny)
 shinyUI(fluidPage(
     
     # Application title
-    titlePanel("On Analysing Ultraviolet Photodissociation Fragment Spectra"),
+    titlePanel(paste("On Analysing Ultraviolet Photodissociation Fragment Spectra", "- version", packageVersion('uvpd'))),
     
     # Sidebar with a slider input for number of bins
     sidebarLayout(

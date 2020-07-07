@@ -105,10 +105,11 @@ shinyServer(function(input, output) {
   getFilteredData <- reactive({
     DF <- getData()
     if(input$removePC){
-      META <- getThermoUVPD_feb2019()
-      formula.pc <- META[META$Compound %in% input$compound, 2]
-      message(formula.pc)
-      DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
+      
+      formula.pc <- getFormulaPC()
+      message(paste("pc formula", formula.pc))
+      
+      DF <- DF[!as.character(DF$formula) %in% as.character(formula.pc), ]
     }
 
     
@@ -131,15 +132,17 @@ shinyServer(function(input, output) {
   
   getFormulaPC <- reactive({
     META <- getThermoUVPD_feb2019()
-    formula.pc <- META[META$Compound %in% input$compound, 2]
-    formula.pc
+    formula.pc <- META$`Bruto formula`[META$Compound %in% input$compound]
+    
+    unique(formula.pc)
   })
   
   getFilteredClusterData <- reactive({
     DF <- getData()
+    
     if(input$removePC){
       formula.pc <- getFormulaPC()
-      message(formula.pc)
+      message(paste("pc formula", formula.pc))
       DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
     }
     S <- getThermoUVPD_feb2019()
@@ -162,11 +165,12 @@ shinyServer(function(input, output) {
   })
   
   getAggregatedData <- reactive({
-    DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode * type,
-              data=getFilteredData(), FUN=sum)
     
-
-    DF
+    if (nrow(getFilteredData())>0){
+      aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode * type,
+                data=getFilteredData(), FUN=sum)}
+    
+    else{NULL}
   })
   
   getAggregatedClusterData <- reactive({

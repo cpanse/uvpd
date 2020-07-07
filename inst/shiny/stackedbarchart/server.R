@@ -66,6 +66,7 @@ shinyServer(function(input, output) {
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
     
+    # TODO(cp): sanity check
     dd.compound <- c('4-Nitrocatechol', '2-Nitrohydroquinone', '4-Nitro-1,3-benzenediol',
             '2-Hydroxy-3-nitrobenzoic acid', '4-Hydroxy-3-nitrobenz',
             '2-Hydroxy-5-nitrobenzoic acid')

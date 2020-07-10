@@ -190,6 +190,7 @@ shinyServer(function(input, output) {
     selectInput("compound", "compound", getCompound(), multiple = FALSE, selected = "Triadimenol")
   })
   
+  #------ fitdistr-----
   output$distPlot <- renderPlot({
     par(mfrow=c(3, 2))
     hist(getFilteredData()$ppmerror, sub=input$compound)

@@ -3,7 +3,7 @@ Type: Package
 Title: On Analyzing Ultraviolet Photodissociation Spectra
 Author: Christian Panse [cre, aut], Andrea Brunner [ctb, aut]
 Maintainer: Christian Panse<cp@fgcz.ethz.ch>
-Version: 0.0.4
+Version: 0.0.5
 Description: provides ... 
 Depends: R (>= 3.5), protViz (>= 0.4)
 Suggest: knitr, rawDiag (>= 0.0.20), rmarkdown, readr, roxygen2, rcdk

@@ -18,12 +18,16 @@ positiveIonTypePattern <- c("M1P", "M2H1P",  "MH1P")
 shinyServer(function(input, output) {
   
   output$selectRData <- renderUI({
-    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData', 'uvpd_20200626.RData', 'uvpd_20200702.RData'),
+    selectInput("rdata", "rdata", c('uvpd_20200522.RData',
+                                    'uvpd_20200612.RData',
+                                    'uvpd_20200626.RData',
+                                    'uvpd_20200702.RData'),
                  multiple = FALSE, selected = 'uvpd_20200702.RData')
   })
   
   output$selectFragmentsRData <- renderUI({
-    selectInput("rdata", "rdata", c('uvpd_20200522.RData', 'uvpd_20200612.RData'),
+    selectInput("rdata", "rdata", c('uvpd_20200522.RData',
+                                    'uvpd_20200612.RData'),
                 multiple = FALSE, selected = 'uvpd_20200612.RData')
   })
   
@@ -35,19 +39,24 @@ shinyServer(function(input, output) {
   
   getPredictedFragments <- reactive({
     e <- new.env()
-    load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.20200625.RData"), envir = e)
+    load(file.path(system.file(package = 'uvpd'), "extdata",
+                   "fragments.20200625.RData"), envir = e)
     e$fragments.treeDepth1
   })
   
   # ease for debugging
-  .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata", 'uvpd_20200626.RData')){
+  .gd <- function(fn=file.path(system.file(package = 'uvpd'), "extdata",
+                               'uvpd_20200626.RData')){
     e <- new.env()
     
     
-    load(file.path(system.file(package = 'uvpd'), "extdata", "fragments.20200625.RData"), envir = e)
+    load(file.path(system.file(package = 'uvpd'), "extdata",
+                   "fragments.20200625.RData"), envir = e)
+    
     #e$fragments.treeDepth1 <- getPredictedFragments()
     pp <- data.frame(formula = e$fragments.treeDepth1$formula,
-                     nPredictedPeaks = sapply(e$fragments.treeDepth1$ms2, function(x){length(unique(x$mZ))}))
+                     nPredictedPeaks = sapply(e$fragments.treeDepth1$ms2,
+                                              function(x){length(unique(x$mZ))}))
     
     load(fn, envir = e)
     X <- e$X.top3.master.intensity
@@ -65,6 +74,10 @@ shinyServer(function(input, output) {
     
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
+    
+    
+    f.Benzocaine <- XY$compound == 'Benzocaine' & grepl("_met1", XY$file.y)
+    XY <- XY[!f.Benzocaine, ]
     
     # TODO(cp): sanity check
     dd.compound <- c('4-Nitrocatechol', '2-Nitrohydroquinone', '4-Nitro-1,3-benzenediol',
@@ -441,8 +454,8 @@ shinyServer(function(input, output) {
     #DF <- getAggregatedData()
     
     DF <- getThermoUVPD_feb2019()
-    
-    paste(DF[DF$Compound %in% input$compound, ], col=',')
+    tt <- DF[DF$Compound %in% input$compound, ]
+    paste0(tt[1], col=',')
   })
   
   gg_color_hue <- function(n) {

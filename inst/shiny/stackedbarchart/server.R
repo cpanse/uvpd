@@ -76,7 +76,7 @@ shinyServer(function(input, output) {
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
     
     
-    f.Benzocaine <- XY$compound == 'Benzocaine' & grepl("_met1", XY$file.y)
+    f.Benzocaine <- XY$compound %in% c('Benzocaine', '3-Nitrophenol', '4-Chlorobenzoic acid') & grepl("_met1", XY$file.y)
     XY <- XY[!f.Benzocaine, ]
     
     # TODO(cp): sanity check

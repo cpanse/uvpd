@@ -66,8 +66,14 @@ shinyServer(function(input, output) {
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
     
+    # TODO(cp): sanity check
+    dd.compound <- c('4-Nitrocatechol', '2-Nitrohydroquinone', '4-Nitro-1,3-benzenediol',
+            '2-Hydroxy-3-nitrobenzoic acid', '4-Hydroxy-3-nitrobenz',
+            '2-Hydroxy-5-nitrobenzoic acid')
+    
+    dd.formula0 <- c('C7H5NO5')
     message(dim(XY))
-    XY
+    XY[!(XY$compound %in% dd.compound | XY$formula0 %in% dd.formula0), ]
   }
   #---- getData ----
   getData <- reactive({
@@ -100,10 +106,11 @@ shinyServer(function(input, output) {
   getFilteredData <- reactive({
     DF <- getData()
     if(input$removePC){
-      META <- getThermoUVPD_feb2019()
-      formula.pc <- META[META$Compound %in% input$compound, 2]
-      message(formula.pc)
-      DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
+      
+      formula.pc <- getFormulaPC()
+      message(paste("pc formula", formula.pc))
+      
+      DF <- DF[!as.character(DF$formula) %in% as.character(formula.pc), ]
     }
 
     
@@ -126,15 +133,17 @@ shinyServer(function(input, output) {
   
   getFormulaPC <- reactive({
     META <- getThermoUVPD_feb2019()
-    formula.pc <- META[META$Compound %in% input$compound, 2]
-    formula.pc
+    formula.pc <- META$`Bruto formula`[META$Compound %in% input$compound]
+    
+    unique(formula.pc)
   })
   
   getFilteredClusterData <- reactive({
     DF <- getData()
+    
     if(input$removePC){
       formula.pc <- getFormulaPC()
-      message(formula.pc)
+      message(paste("pc formula", formula.pc))
       DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
     }
     S <- getThermoUVPD_feb2019()
@@ -157,11 +166,12 @@ shinyServer(function(input, output) {
   })
   
   getAggregatedData <- reactive({
-    DF <- aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode * type,
-              data=getFilteredData(), FUN=sum)
     
-
-    DF
+    if (nrow(getFilteredData())>0){
+      aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode * type,
+                data=getFilteredData(), FUN=sum)}
+    
+    else{NULL}
   })
   
   getAggregatedClusterData <- reactive({
@@ -253,7 +263,9 @@ shinyServer(function(input, output) {
     #save(DF, file="/tmp/score.RData")
     M<-getThermoUVPD_feb2019()[, c("Compound", "Cas nr")]
     DF <- merge(M, DF, by.y='compound', by.x="Compound")
-    unique(DF)
+    DF <- unique(DF)
+    names(DF)[1] <- 'compound'
+    DF
   })
   
   # Downloadable csv of selected dataset ----
@@ -267,6 +279,16 @@ shinyServer(function(input, output) {
     }
   )
   
+  # Downloadable csv of selected dataset ----
+  output$downloadFreq <- downloadHandler(
+    filename = function() {
+      paste("uvpd-shiny-application-freq", ".csv", sep = "")
+    },
+    content = function(file) {
+      
+      write.csv(getTableFreqAll(), file, row.names = FALSE)
+    }
+  )
   
   getFilteredScoreTable <- reactive({
     
@@ -310,8 +332,6 @@ shinyServer(function(input, output) {
       score1 <- A[, c('fragmode', 'score1')] ; score1$score <-"score1"; names(score1) <- c('fragmode','value','score')
       score2 <- A[, c('fragmode', 'score2')] ; score2$score <-"score2"; names(score2) <- c('fragmode','value','score')
       score3 <- A[, c('fragmode', 'score3')] ; score3$score <-"score3"; names(score3) <- c('fragmode','value','score')
-      
-
       lattice::dotplot(value ~ fragmode | score, data=do.call('rbind', list(score1, score2, score3)),
                        scales = "free", layout=c(1,3), index.cond = list(rev(1:3)))
     }else{
@@ -356,14 +376,50 @@ shinyServer(function(input, output) {
     gp
   }, width=1000, height = 400)
   
+  .freqstat <- function(DF, compound){
+    DF <- DF[DF$compound == compound, ];
+    
+    if (unique(DF$mode)<0){
+      message("negative mode")
+      DF <- DF[DF$type %in% negativeIonTypePattern, ]
+    }
+    else{
+      message("positive mode")
+      DF <- DF[DF$type %in% positiveIonTypePattern, ]
+    }
+    
+    rv <- aggregate(formula ~ compound * fragmode,
+                    data = unique(DF[,c('compound', 'fragmode','formula')]),
+                    FUN = length)
+    as.data.frame(rv)
+  }
+  # ==== getTableFreqAll =====
   
+  getTableFreqAll <- reactive({
+    message("getTableFreqAll")
+    DF <- getData()
+    filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
+    DF <- DF[filter, ]
+    if(input$removePC){
+      
+      formula.pc <- getFormulaPC()
+      message(paste("pc formula", formula.pc))
+      
+      DF <- DF[!as.character(DF$formula) %in% as.character(formula.pc), ]
+    }
+    do.call('rbind', lapply(unique(DF$compound), .freqstat, DF=DF))
+  })
+  
+  output$TableFreqAll <- DT::renderDataTable({
+    getTableFreqAll()
+  })
   
   getTableFreq <- reactive({
     DF <- getAggregatedData()
-    print(names(DF))
+  
     rv <- table(unique(subset(DF, select=c('fragmode','formula')))[,1])
     
-    rv <- (as.data.frame(rv))
+    as.data.frame(rv)
   })
   
   output$ThermoUVPD <- renderTable({
@@ -375,14 +431,10 @@ shinyServer(function(input, output) {
     getTableFreq()
   })
   
-  
-  
   output$tableFilteredData <- renderTable({
     
     getFilteredData()
   })
-  
-
   
   output$stackedBarChartText <- renderText({ 
     #x  "You have selected this"
@@ -434,7 +486,7 @@ shinyServer(function(input, output) {
     
     cm <- gg_color_hue(n)
     if (getFormulaPC() %in% as.character(DF$formula)){
-      cm <- c(gg_color_hue(n-1),'grey')
+      cm <- c(gg_color_hue(n-1), 'grey')
     }
     
     
@@ -477,6 +529,8 @@ shinyServer(function(input, output) {
     
     DF[, c('mZ', 'intensity', 'formula', 'compound', 'type',	'eps', 	'ppmerror', 'scan.y', 'fragmode')]
   }, options=list(pageLength = 25))
+  
+  
   output$xyplot <- renderPlot({
     lattice::xyplot(intensity ~ mZ | fragmode, 
                     group=paste(file.y, scan.y),

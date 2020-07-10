@@ -13,7 +13,7 @@ library(shiny)
 shinyUI(fluidPage(
     
     # Application title
-    titlePanel("On Analysing Ultraviolet Photodissociation Fragment Spectra"),
+    titlePanel(paste("On Analysing Ultraviolet Photodissociation Fragment Spectra", "- version", packageVersion('uvpd'))),
     
     # Sidebar with a slider input for number of bins
     sidebarLayout(
@@ -27,6 +27,7 @@ shinyUI(fluidPage(
                 selectInput("epserror", "absolute error cut-off", c(0.0001, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.05, 0.1, 0.5), multiple = FALSE, selected = 0.002),
                 # Button
                 downloadButton("downloadScores", "Download Scores"),
+                downloadButton("downloadFreq", "Download Frequency"),
                  htmlOutput('selectCluster')
             )),
         
@@ -76,6 +77,10 @@ shinyUI(fluidPage(
             tabPanel("score", list(
                 column(width = 10,   
                        DT::DTOutput('tableScore')
+                ))),
+            tabPanel("freqTable", list(
+                column(width = 10,   
+                       DT::DTOutput('TableFreqAll')
                 ))),
             tabPanel("scorePlot", list(
                 column(width = 10,   

@@ -38,13 +38,17 @@ shinyUI(fluidPage(
                        ".shiny-output-error:before { visibility: hidden; }"),
             tabsetPanel(
             
-            tabPanel("stacked", list(
+            tabPanel("stacked fragments", list(
                 column(width = 10,
+                       
                        plotOutput("scorePlot"),
+                       helpText("The stacked bar charts draw the logarithmically transformed fragment ion intensities for the different ion fragmentations and types, respectively. If marked in the checkbox (left), the unfragmented precursor peaks are removed."),
                        htmlOutput("stackedBarChartText"),
                        plotOutput("stackedBarChart"),
                        plotOutput("stackedBarChartIonType"),
+                       helpText("Each panel plots the top three most abundant total ion count (TIC) versus the master intensity of one raw file. The color linking indicates for the raw file grouping."),
                        plotOutput("top3"),
+                       helpText("The boxplots draw the absolute error (in Dalton) distribution."),
                        plotOutput("bwplot")
                 ))),
             tabPanel("stacked group", list(

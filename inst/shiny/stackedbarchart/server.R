@@ -33,7 +33,7 @@ shinyServer(function(input, output) {
   
   
   output$selectCluster <- renderUI({
-    selectInput("clusterid", "clusterid", getClsuterIds(),
+    selectInput("clusterid", "cluster ID", getClsuterIds(),
                 multiple = FALSE, selected = getClsuterIds()[1])
   })
   
@@ -274,7 +274,7 @@ shinyServer(function(input, output) {
     DF <- A.sum[order(A.sum$compound, A.sum$fragmode),
                 c('compound', 'formula0', 'file.y', 'scan.y','mode', 'fragmode', 'nMs2', 'nPredictedPeaks', 'master.intensity','score1', 'score2', 'score3')]
     #save(DF, file="/tmp/score.RData")
-    M<-getThermoUVPD_feb2019()[, c("Compound", "Cas nr")]
+    M <- getThermoUVPD_feb2019()[, c("Compound", "Cas nr")]
     DF <- merge(M, DF, by.y='compound', by.x="Compound")
     DF <- unique(DF)
     names(DF)[1] <- 'compound'
@@ -325,7 +325,7 @@ shinyServer(function(input, output) {
     DF
   })
   
-  output$tableScore <- DT::renderDT({
+  output$tableScore <- DT::renderDataTable({
     datatable(getScoreTable())
   })
   
@@ -420,7 +420,9 @@ shinyServer(function(input, output) {
       
       DF <- DF[!as.character(DF$formula) %in% as.character(formula.pc), ]
     }
-    do.call('rbind', lapply(unique(DF$compound), .freqstat, DF=DF))
+    rv <- do.call('rbind', lapply(unique(DF$compound), .freqstat, DF=DF))
+    names(rv) <- c('compound', 'fragmentation mode', 'frequency')
+    rv
   })
   
   output$TableFreqAll <- DT::renderDataTable({
@@ -436,26 +438,27 @@ shinyServer(function(input, output) {
   })
   
   output$ThermoUVPD <- renderTable({
-    getThermoUVPD_feb2019()  
+    getThermoUVPD_feb2019()[, c(1,2,3,5)]  
   })
   
   output$tableFreq <- renderTable({
-    
-    getTableFreq()
+    rv <- getTableFreq()
+    names(rv) <- c('fragmentation mode', 'frequency')
+    rv
   })
   
-  output$tableFilteredData <- renderTable({
+  output$tableFilteredData <- DT::renderDT({
     
     getFilteredData()
   })
   
-  output$stackedBarChartText <- renderText({ 
+  output$stackedBarChartText <- renderTable({ 
     #x  "You have selected this"
     #DF <- getAggregatedData()
     
     DF <- getThermoUVPD_feb2019()
     tt <- DF[DF$Compound %in% input$compound, ]
-    paste0(tt[1], col=',')
+    tt[1, c(1,2,3,5)]
   })
   
   gg_color_hue <- function(n) {
@@ -541,7 +544,7 @@ shinyServer(function(input, output) {
     DF <- getFilteredData()
     
     DF[, c('mZ', 'intensity', 'formula', 'compound', 'type',	'eps', 	'ppmerror', 'scan.y', 'fragmode')]
-  }, options=list(pageLength = 25))
+  }, options=list(pageLength = 10))
   
   
   output$xyplot <- renderPlot({
@@ -606,7 +609,7 @@ shinyServer(function(input, output) {
     .summary()
   }, rownames = TRUE)
   
-  output$tableinSilicoFragmentIon <- renderTable({ 
+  output$tableinSilicoFragmentIon <- DT::renderDataTable({ 
     DF <- getThermoUVPD_feb2019()
     
     formula=DF$`Bruto formula`[DF$Compound == input$compound]

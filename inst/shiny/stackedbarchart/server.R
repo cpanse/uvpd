@@ -625,9 +625,11 @@ shinyServer(function(input, output) {
   
   
   #---- sessionInfo ----
+  output$citation <- renderPrint({
+    capture.output(citation('uvpd'))
+  })
   
   output$sessionInfo <- renderPrint({
-    
     capture.output(sessionInfo())
   })
   

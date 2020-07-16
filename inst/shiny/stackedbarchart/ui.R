@@ -117,6 +117,9 @@ Those ions represent the entire search space for the peak assignment."),
                            helpText(paste("Help uvpd -", "version", packageVersion('uvpd'))),
                            includeMarkdown(helpfile),
                            hr(),
+                           HTML("<h3>Howto cite?</h3>"),
+                           verbatimTextOutput("citation"),
+                           HTML("<h3>Session Information</h3>"),
                            helpText("below is the output of the method call sessionInfo()"),
                            verbatimTextOutput("sessionInfo")
                            

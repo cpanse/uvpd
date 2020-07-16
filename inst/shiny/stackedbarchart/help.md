@@ -1,12 +1,31 @@
-## Contact us
+### Contact us
 
 by E-mail [Brunner, Andrea](mailto: Andrea.Brunner@kwrwater.nl?SUBJECT=-> help uvpd shiny) or [cp@fgcz.ethz.ch](mailto:cp@fgcz.ethz.ch?SUBJECT=-> help uvpd shiny)
 
-## Bug Reports
+### Bug Reports
 
 https://github.com/cpanse/uvpd/issues
 
-## Useful bookmarks
+
+### Run the  application
+
+Install the R package
+
+```{r}
+pkgs <- c('shiny', 'ggplot2')
+pkgs <- pkgs[(!pkgs %in% unique(installed.packages()[,'Package']))]
+if(length(pkgs) > 0){install.packages(pkgs)}
+
+install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.9.tar.gz',repos=NULL)
+```
+
+run the shiny application from your computer
+
+```{r}
+shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
+```
+
+### Useful bookmarks
 
 - [Evaluation of food-relevant chemicals in the ToxCast high-throughput screening program](https://doi.org/10.1016/j.fct.2016.04.012)
 

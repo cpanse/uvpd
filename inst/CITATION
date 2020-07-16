@@ -7,7 +7,7 @@ citEntry(entry = "Manual",
   year         = "2020",
   note = "R package version 0.1; https://github.com/cpanse/uvpd/",
 
-  textVersion  = paste("Panse C, Brunnern A, (2020)",
+  textVersion  = paste("Panse C, Brunner A, (2020)",
 	"uvpd: On Analyzing Ultraviolet Photodissociation Spectra.",
 	"R package version 0.1; https://github.com/cpanse/uvpd/")
 )

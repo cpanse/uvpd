@@ -256,6 +256,13 @@ shinyServer(function(input, output) {
   getScoreTable <- reactive({
     
     DF <- getData()
+    
+    if(input$removePC){
+      formula.pc <- getFormulaPC()
+      message(paste("pc formula", formula.pc))
+      DF <- DF[as.character(DF$formula) != as.character(formula.pc), ]
+    }
+    
     filter <- DF$ppmerror < as.numeric(input$ppmerror) | abs(DF$eps) < as.numeric(input$epserror)
     DF <- DF[filter, ]
     
@@ -523,8 +530,7 @@ shinyServer(function(input, output) {
   
   output$stackedBarChartGroup <- renderPlot({
     if (nrow(getAggregatedClusterData()) > 0){
-      
-      
+
       gp <- ggplot(data = getAggregatedClusterData(),
                    aes(x = factor(fragmode, levels = getLevels()),
                        y = log(intensity, 10),

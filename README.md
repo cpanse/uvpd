@@ -90,6 +90,10 @@ shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 
 - ftp://ftp.ncbi.nlm.nih.gov/pubchem/specifications/pubchem_fingerprints.txt
 
-
 - A new metaphor for projection-based visual analysis and data exploration Proc. SPIE
-2007 | conference-paper DOI: 10.1117/12.697879
+2007 | conference-paper [DOI: 10.1117/12.697879](https://www.spiedigitallibrary.org/conference-proceedings-of-spie/6495/1/A-new-metaphor-for-projection-based-visual-analysis-and-data/10.1117/12.697879.short?SSO=1)
+
+- https://CRAN.R-project.org/package=protViz
+
+- [rawDiag - Brings Orbitrap Mass Spectrometry Data to Life; Multi-platform, Fast and Colorful R package. ](https://github.com/fgcz/rawDiag) DOI: [10.1021/acs.jproteome.8b00173](https://pubs.acs.org/doi/10.1021/acs.jproteome.8b00173) 
+

@@ -72,15 +72,13 @@ install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.9.tar.gz',repos=NU
 ```
 
 ### run shiny application
+<a href="http://fgcz-ms-shiny.uzh.ch:8080/p2722-stackedBarChart/"><img src="https://user-images.githubusercontent.com/4901987/86088690-19994000-baa7-11ea-8644-f679470afd8e.png" align="right" width="100px" /></a>
 
-you can run the package's shiny application on our [demo system](http://fgcz-ms-shiny.uzh.ch:8080/p2722-stackedBarChart/) or, when installed, on your own computer by executing the following R code snipped.
-
-<img src="https://user-images.githubusercontent.com/4901987/86088690-19994000-baa7-11ea-8644-f679470afd8e.png" align="right" width="100px" />
+You can run the package's shiny application on our [demo system](http://fgcz-ms-shiny.uzh.ch:8080/p2722-stackedBarChart/) or, when installed, on your computer by executing the following R code snippet:
 
 ```{r}
 shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 ```
-
 
 ## References
 

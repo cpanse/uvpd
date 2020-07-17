@@ -532,7 +532,7 @@ shinyServer(function(input, output) {
         geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
         scale_x_discrete(drop=FALSE) +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-        facet_wrap(~ compound , scales="free", drop=FALSE)
+        facet_wrap(~ mode * compound  , scales="free", drop=TRUE)
       
       # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
       gp }

@@ -98,7 +98,7 @@ shinyUI(fluidPage(
                            HTML("<hr>"),
                            DT::DTOutput('TableFreqAll')
                     ))),
-                tabPanel("predicted cluster", list(
+                tabPanel("cluster", list(
                     column(width = 10,   
                            helpText("The stacked bar charts draw the logarithmically transformed fragment ion intensities for the different ion fragmentations of the same cluster assignments.
 The table shows the cluster assignments of all compounds. The clustering ware performed on a preliminary investigation. The to be displayed cluster ID can be set in the left panel."),

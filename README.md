@@ -78,16 +78,6 @@ install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.9.tar.gz',repos=NU
 shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 ```
 
-### docker
-
-build and run docker image
-
-```{bash}
-git clone git@github.com:cpanse/uvpd.git \
-  && cd uvpd \
-  && docker build . \
-  && docker run --name p2772_uvpd -e PASSWORD=ilse -v /srv/www/htdocs/p2722/:/srv/www/htdocs/p2722/ -p 8888:8787 d3dc766214da
-```
 
 ## References
 

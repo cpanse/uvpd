@@ -97,4 +97,4 @@ shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 
 - [rawDiag - Brings Orbitrap Mass Spectrometry Data to Life; Multi-platform, Fast and Colorful R package. ](https://github.com/fgcz/rawDiag) DOI: [10.1021/acs.jproteome.8b00173](https://pubs.acs.org/doi/10.1021/acs.jproteome.8b00173) 
 
-- (https://ipb-halle.github.io/MetFrag/)
+- [MetFrag relaunched: incorporating strategies beyond in silico fragmentation: C Ruttkies, E L Schymanski, S Wolf, J Hollender, S Neumann Journal of Cheminformatics 2016 8:3 ](https://ipb-halle.github.io/MetFrag/)

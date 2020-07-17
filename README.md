@@ -84,7 +84,7 @@ shiny::runApp(file.path(system.file(package = 'uvpd'), 'shiny/stackedbarchart'))
 
 - [Evaluation of food-relevant chemicals in the ToxCast high-throughput screening program](https://doi.org/10.1016/j.fct.2016.04.012)
 
-- [Chemical Informatics Functionality in R](http://dx.doi.org/10.18637/jss.v018.i05)
+- Chemical Informatics Functionality in R DOI: [10.18637/jss.v018.i05](http://dx.doi.org/10.18637/jss.v018.i05)
 
 - https://CRAN.R-project.org/package=rcdk
 

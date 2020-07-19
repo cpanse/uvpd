@@ -6,7 +6,7 @@
 # R 4.0.1
 
 #library(uvpd)
-#library(metfRag)
+library(metfRag)
 
 library(readr)
 
@@ -237,15 +237,22 @@ pp <- function(rawfile, df, eps=0.1){
 
 	rv$fragmode <- .determineFragMode(rv$header)
 
-	xic <- readXICs(rawfile, masses = rv$exact.mass + rv$mode, tol = 10)
-	rv$xic <- .extractXIC(xic, rv$rtime)
+	if (length(rv$exact.mass) > 0){
 
-	rv
+		xic <- MsBackendRawFileReader::readXICs(rawfile, masses = rv$exact.mass + rv$mode, tol = 10)
+		rv$xic <- .extractXIC(xic, rv$rtime)
+		rv
+	}
+
+	NULL
 }
 
+df <- df[36,]
+
+fileidx <- 7
 message(paste("processing fileidx", fileidx, rawfiles[fileidx], "..."))
-uvpdSummary <- do.call('rbind', lapply(rawfiles[fileidx], pp, df=df, eps=0.01))
-write.csv(uvpdSummary, file=paste("202006l1-uvpd-summary", fileidx, "csv", sep='.'), row.names = FALSE)
+uvpdSummary <- do.call('rbind', lapply(rawfiles[fileidx], pp, df=df, eps=0.1))
+write.csv(uvpdSummary, file=paste("20200713-uvpd-summary", fileidx, "csv", sep='.'), row.names = FALSE)
 
 #sessionInfo()
 

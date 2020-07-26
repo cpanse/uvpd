@@ -6,7 +6,7 @@ Authors@R: c(person("Christian", "Panse", email = "cp@fgcz.ethz.ch", role = c("a
 	person("Andrea", "Brunner", email = "andrea.brunner@kwrwater.nl", role = c("ctb", "aut"),
 	comment = c(ORCID = "0000-0002-2801-1751")))
 Maintainer: Christian Panse<cp@fgcz.ethz.ch>
-Version: 0.0.11
+Version: 0.0.12
 Description: provides the basic methods, data, and a shiny application.
     The package is developed, tested and used at the Functional
     Genomics Center Zurich <https://fgcz.ch>.

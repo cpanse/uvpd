@@ -86,8 +86,17 @@ shinyServer(function(input, output) {
     
     dd.formula0 <- c('C7H5NO5')
     message(dim(XY))
-    XY[!(XY$compound %in% dd.compound | (XY$formula0 %in% dd.formula0 & XY$Compound != "Benzoic acid, 2-hydroxy-4-nitro-")), ]
-    #XY
+    XY <- XY[!(XY$compound %in% dd.compound | (XY$formula0 %in% dd.formula0 & XY$Compound != "Benzoic acid, 2-hydroxy-4-nitro-")), ]
+    
+    # filter 2
+    
+    dd.compound0 <- "2-Amino-3-nitrobenzoic acid"
+    XY <- XY[!(XY$compound %in% dd.compound0 & (grepl("^KWR", XY$filename) | XY$Group == "KWR"))  , ]
+    
+    dd.compound1 <- "4-Nitroanthranilic acid"
+    XY <- XY[!(XY$compound %in% dd.compound1 & (grepl("^DBP", XY$filename) | XY$Group == "DBP"))  , ]
+    
+    XY
   }
   #---- getData ----
   getData <- reactive({
@@ -446,7 +455,7 @@ shinyServer(function(input, output) {
   })
   
   output$ThermoUVPD <- renderTable({
-    getThermoUVPD_feb2019()[, c(1,2,3,5)]  
+    getThermoUVPD_feb2019()[, c(1,2,3,4,5)]  
   })
   
   output$tableFreq <- renderTable({

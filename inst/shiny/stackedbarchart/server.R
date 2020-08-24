@@ -511,8 +511,7 @@ shinyServer(function(input, output) {
   }, width=1000, height = 400)
   
   #---- stacked barchart fragment ion----
-  output$stackedBarChart <- renderPlot({
-    
+  plotStackedBarChart <-reactive({
     DF <- getAggregatedData()
     
     n <- length(unique(DF$formula))
@@ -529,14 +528,35 @@ shinyServer(function(input, output) {
                      fill=reorder(formula, mZ))) +
       geom_bar(stat="identity", position = position_stack(reverse = FALSE)) +
       scale_x_discrete(drop=FALSE) +
-      theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+      theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+      guides(fill=guide_legend(title="formula")) +
+      xlab("") +
       scale_fill_manual(values = cm) +
       facet_wrap(~ compound * mode, scales="free", drop=FALSE)
     
     # gp2 <- ggplot(data=unique(subset(S, select=c('fragmode','formula'))), aes(x=factor(fragmode, levels = sort(unique(DF$fragmode))), fill=(formula))) + ggplot2::geom_bar()
     gp
+  })
+  
+  output$stackedBarChart <- renderPlot({
+    plotStackedBarChart()
   }, width=1000, height = 400)
   
+  output$downloadStackedBarChartPdf <- downloadHandler(
+    filename = function() { paste(input$compound, '.pdf', sep='') },
+    content = function(file) {
+      ggsave(file, plotStackedBarChart() +
+               theme(text = element_text(size = 16)) , device = 'pdf') 
+    }
+  )
+  
+  output$downloadStackedBarChartPng <- downloadHandler(
+    filename = function() { paste(input$compound, '.png', sep='') },
+    content = function(file) {
+      ggsave(file, plotStackedBarChart() +
+               theme(text = element_text(size = 12)) , device = 'png')
+    }
+  )
   output$stackedBarChartGroup <- renderPlot({
     if (nrow(getAggregatedClusterData()) > 0){
 

@@ -49,6 +49,8 @@ shinyUI(fluidPage(
                            helpText("The stacked bar charts draw the logarithmically transformed fragment ion intensities for the different ion fragmentations and types, respectively. If marked in the checkbox (left), the unfragmented precursor peaks are removed."),
                            
                            plotOutput("stackedBarChart"),
+                           downloadButton('downloadStackedBarChartPdf', 'Download stacked bar chart as pdf'),
+                           downloadButton('downloadStackedBarChartPng', 'Download stacked bar chart as png'),
                            plotOutput("stackedBarChartIonType"),
                            helpText("Each panel plots the top three most abundant total ion count (TIC) versus the master intensity of one raw file. The color linking indicates for the raw file grouping."),
                            plotOutput("top3"),
@@ -98,13 +100,13 @@ shinyUI(fluidPage(
                            HTML("<hr>"),
                            DT::DTOutput('TableFreqAll')
                     ))),
-                tabPanel("cluster", list(
-                    column(width = 10,   
-                           helpText("The stacked bar charts draw the logarithmically transformed fragment ion intensities for the different ion fragmentations of the same cluster assignments.
- The table shows the cluster assignments of all compounds. The clustering ware performed on a preliminary investigation. The to be displayed cluster ID can be set in the left panel."),
-                           plotOutput("stackedBarChartGroup"),
-                           tableOutput('ThermoUVPD')
-                    ))),
+#                tabPanel("cluster", list(
+#                    column(width = 10,   
+#                           helpText("The stacked bar charts draw the logarithmically transformed fragment ion intensities for the different ion fragmentations of the same cluster assignments.
+# The table shows the cluster assignments of all compounds. The clustering ware performed on a preliminary investigation. The to be displayed cluster ID can be set in the left panel."),
+#                           plotOutput("stackedBarChartGroup"),
+#                           tableOutput('ThermoUVPD')
+#                    ))),
                 tabPanel("predicted ion", list(
                     column(width = 10,   
                            helpText("By using the method `metfRag::frag.generateFragments` derived fragment ions are listed below. 

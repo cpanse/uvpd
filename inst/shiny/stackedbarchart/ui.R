@@ -87,6 +87,7 @@ shinyUI(fluidPage(
                            HTML("<p><dfn>score3</dfn> experimental matched fragment intensities &frasl; master.intensity.</p>"),
                            downloadButton("downloadScores", "Download Scores"),
                            hr(),
+                           DT::DTOutput('tableScoreFreq'),
                            DT::DTOutput('tableScore'),
                            hr(),
                            plotOutput("score1Plot"),

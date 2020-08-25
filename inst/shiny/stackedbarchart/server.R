@@ -49,33 +49,42 @@ shinyServer(function(input, output) {
                                'uvpd_20200626.RData')){
     e <- new.env()
     
-    
+    # we need the compound
+    Thermo <- getThermoUVPD_feb2019()[, c("Compound", "SMILES")]
+    names(Thermo) <- c("compound", "SMILES")
+
     load(file.path(system.file(package = 'uvpd'), "extdata",
                    "fragments.20200625.RData"), envir = e)
-    
-    #e$fragments.treeDepth1 <- getPredictedFragments()
+
+    # predicted peaks (in-silico)
     pp <- data.frame(formula = e$fragments.treeDepth1$formula,
+                     SMILES = e$fragments.treeDepth1$SMILES,
                      nPredictedPeaks = sapply(e$fragments.treeDepth1$ms2,
                                               function(x){length(unique(x$mZ))}))
-    
+
+    # we need the compound 
+    pp <- merge(pp, Thermo, by='SMILES')
+    pp <- pp[,c(4,3)]
     load(fn, envir = e)
     X <- e$X.top3.master.intensity
     #Y <- do.call('rbind', do.call('rbind',  e$X.top3.master.intensity.MS2))
     Y <- e$X.top3.master.intensity.MS2
-    Y <- merge(Y, pp, by.x='formula0', by.y='formula')
-    message("DEBUG")
-    message(dim(X))
-    message(dim(Y))
+
+    ## merging by formula0 (multiple compounds have the same formula) is not unique therfore we merge by compound
+    # Y <- merge(Y, pp, by.x='formula0', by.y='formula')
+    Y <- merge(Y, pp, by.x='compound', by.y='compound')
+
     X$file <- X$filename
-    
     X$m <- paste(X$file, X$scan)
     Y$m <- paste(Y$file, Y$scan)
     XY <- base::merge(X, Y, by="m")
     
+    # naming cosmetics to have the right order in the plots
     XY$fragmode <- gsub("uvpd50.00", "uvpd050.00", XY$fragmode)
     XY$fragmode <- gsub("uvpd25.00", "uvpd025.00", XY$fragmode)
-    
-    
+
+
+    # data cleaning caused because same formula issue; whatsoever we know the content of the sample
     f.Benzocaine <- XY$compound %in% c('Benzocaine', '3-Nitrophenol', '4-Chlorobenzoic acid') & grepl("_met1", XY$file.y)
     XY <- XY[!f.Benzocaine, ]
     
@@ -83,25 +92,32 @@ shinyServer(function(input, output) {
     dd.compound <- c('4-Nitrocatechol', '2-Nitrohydroquinone', '4-Nitro-1,3-benzenediol',
             '2-Hydroxy-3-nitrobenzoic acid', '4-Hydroxy-3-nitrobenz',
             '2-Hydroxy-5-nitrobenzoic acid')
-    
+
     dd.formula0 <- c('C7H5NO5')
     message(dim(XY))
     XY <- XY[!(XY$compound %in% dd.compound | (XY$formula0 %in% dd.formula0 & XY$Compound != "Benzoic acid, 2-hydroxy-4-nitro-")), ]
-    
+
     # filter 2
-    
+
     dd.compound0 <- "2-Amino-3-nitrobenzoic acid"
     XY <- XY[!(XY$compound %in% dd.compound0 & (grepl("^KWR", XY$filename) | XY$Group == "KWR"))  , ]
     
     dd.compound1 <- "4-Nitroanthranilic acid"
     XY <- XY[!(XY$compound %in% dd.compound1 & (grepl("^DBP", XY$filename) | XY$Group == "DBP"))  , ]
-    
+
+    dd.compound2 <- "4-Nitrophenol"
+    XY <- XY[!(XY$compound %in% dd.compound2 & (grepl("^KWR", XY$filename) | XY$Group == "KWR"))  , ]
+
+    dd.compound3 <- "3-Nitrophenol"
+    XY <- XY[!(XY$compound %in% dd.compound3 & (grepl("^DBP", XY$filename) | XY$Group == "DBP"))  , ]
+
     XY
   }
   #---- getData ----
   getData <- reactive({
     message("GETDATA BEGIN")
     fn <- file.path(system.file(package = 'uvpd'), "extdata", input$rdata)
+    
     
     #M <- M[, c("Compound", "Cas nr")]
     DF <- unique(.gd(fn))
@@ -113,12 +129,11 @@ shinyServer(function(input, output) {
   
   
   getThermoUVPD_feb2019 <- reactive({
-    
+   
     fn <- file.path(system.file(package = 'uvpd'), "extdata/ThermoUVPD_feb2019.csv")
     ThermoUVPD_feb2019 <- read_csv(fn, na = c("", "#N/A"))
     
-    DF <- ThermoUVPD_feb2019[, c("Compound", "Bruto formula", "Cluster number", "Group", "Cas nr")]
-    DF[ThermoUVPD_feb2019$Compound %in% getData()$Compound, ]
+    ThermoUVPD_feb2019[, c("Compound", "Bruto formula", "Cluster number", "Group", "Cas nr", "SMILES")]
   })
   
   getClsuterIds <- reactive({
@@ -344,6 +359,12 @@ shinyServer(function(input, output) {
   
   output$tableScore <- DT::renderDataTable({
     datatable(getScoreTable())
+  })
+  
+  output$tableScoreFreq <- DT::renderDataTable({
+    DF <- getScoreTable()
+   
+    datatable(as.data.frame(table(DF$compound, DF$fragmode)))
   })
   
   

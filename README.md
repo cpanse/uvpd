@@ -29,7 +29,7 @@ pkgs <- c('shiny', 'ggplot2')
 pkgs <- pkgs[(!pkgs %in% unique(installed.packages()[,'Package']))]
 if(length(pkgs) > 0){install.packages(pkgs)}
 
-install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.9.tar.gz',repos=NULL)
+install.packages('http://fgcz-ms.uzh.ch/~cpanse/UVPD/uvpd_0.0.15.tar.gz',repos=NULL)
 
 ```
 

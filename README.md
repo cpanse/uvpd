@@ -1,4 +1,4 @@
-[![molecules](https://img.shields.io/badge/molecules-10.3390%2Fmolecules25184189-brightgreen)](https://doi.org/10.3390/molecules25184189)
+[![MDPI](https://img.shields.io/badge/molecules-10.3390%2Fmolecules25184189-brightgreen)](https://doi.org/10.3390/molecules25184189)
 
 
 

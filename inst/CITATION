@@ -1,11 +1,15 @@
 citHeader("To cite the package, please use one of the appropriate publications listed below.")
 
-citEntry(entry = "Manual",
-  title        = "uvpd: On Analyzing Ultraviolet Photodissociation Spectra",
-  author       = personList( as.person("Christian Panse"),
-                   as.person("Andrea M. Brunner")),
+citEntry(entry = "Article"
+  title        = "{Ultraviolet Photodissociation for Non-Target Screening-Based Identification of Organic Micro-Pollutants in Water Samples}",
+  author       = "{Panse,  Christian and Sharma,  Seema and Huguet,  Romain and Vughs,  Dennis and Grossmann,  Jonas and Brunner,  Andrea Mizzi}",
   year         = "2020",
-  note = "R package version 0.1; https://github.com/cpanse/uvpd/",
+  DOI          = "{10.3390/molecules25184189}",
+  number       = {18},
+  volume       = "{25}",
+  journal      = {Molecules},
+  pages        = {4189},
+  note         = "R package version 0.0.17; https://github.com/cpanse/uvpd/",
 
   textVersion  = paste("Panse C, Brunner A, (2020)",
 	"uvpd: On Analyzing Ultraviolet Photodissociation Spectra.",

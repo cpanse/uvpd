@@ -212,6 +212,15 @@ shinyServer(function(input, output) {
     else{NULL}
   })
   
+  getAggregatedData2 <- reactive({
+    
+    if (nrow(getFilteredData())>0){
+      aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode * type * master.intensity * tic,
+                data=getFilteredData(), FUN=sum)}
+    
+    else{NULL}
+  })
+  
   getAggregatedClusterData <- reactive({
     aggregate(intensity ~ mZ * file.y * fragmode * compound * formula * Group * mode,
               data=getFilteredClusterData(), FUN=sum)
@@ -571,6 +580,17 @@ shinyServer(function(input, output) {
     }
   )
   
+  # Downloadable csv of selected dataset ----
+  output$downloadStackedBarChartCsv <- downloadHandler(
+    filename = function() {
+      paste(input$compound, '.csv', sep='') 
+    },
+    content = function(file) {
+      
+      write.csv(getAggregatedData2(), file, row.names = FALSE, sep=',')
+    }
+  )
+  
   output$downloadStackedBarChartPng <- downloadHandler(
     filename = function() { paste(input$compound, '.png', sep='') },
     content = function(file) {
@@ -578,6 +598,7 @@ shinyServer(function(input, output) {
                theme(text = element_text(size = 12)) , device = 'png')
     }
   )
+  
   output$stackedBarChartGroup <- renderPlot({
     if (nrow(getAggregatedClusterData()) > 0){
 

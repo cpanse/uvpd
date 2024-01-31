@@ -51,6 +51,7 @@ shinyUI(fluidPage(
                            plotOutput("stackedBarChart"),
                            downloadButton('downloadStackedBarChartPdf', 'Download stacked bar chart as pdf'),
                            downloadButton('downloadStackedBarChartPng', 'Download stacked bar chart as png'),
+                           downloadButton('downloadStackedBarChartCsv', 'Download selected data as csv'),
                            plotOutput("stackedBarChartIonType"),
                            helpText("Each panel plots the top three most abundant total ion count (TIC) versus the master intensity of one raw file. The color linking indicates for the raw file grouping."),
                            plotOutput("top3"),
